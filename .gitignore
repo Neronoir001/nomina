@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dev-dist/
+*.log
+.DS_Store
+.claude/
+# Sécurité : aucun contenu des livres ni pack de données ne doit être publié
+Documents bases/
+pack/
+*.pdf
+*.docx
+*.mvins
