@@ -100,3 +100,11 @@ input.center { text-align: center; }
 .pick-list button:hover { border-color: var(--gold); }
 .pick-resume { flex-basis: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .resume .dl { font-size: .88rem; }
+
+/* Menu de choix avec recherche */
+.choix { display: flex; flex-direction: column; gap: .3rem; font-size: .9rem; color: var(--muted); }
+.choix-btn { display: flex; align-items: center; gap: .4rem; width: 100%; min-height: 44px; text-align: left; font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: .55rem .7rem; cursor: pointer; }
+.choix-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.choix-fleche { margin-left: auto; color: var(--gold); }
+.pick-list button.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.tag-prince { color: #ffb4ad; background: rgba(195, 49, 42, .18); text-transform: none; letter-spacing: 0; font-size: .75rem; }

@@ -1,5 +1,6 @@
 // Petits composants d'interface réutilisables.
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { correspond } from './lib/texte'
 
 export function Field(p: {
   label: string
@@ -136,6 +137,73 @@ export function FilePick(p: { label: string; onFile: (f: File) => void; classNam
         }}
       />
     </>
+  )
+}
+
+export type OptionChoix = { id: string; label: string; detail?: string; recherche?: string }
+
+/**
+ * Menu de choix avec recherche : un bouton qui affiche la valeur choisie
+ * et ouvre une liste filtrable (au doigt comme à la souris).
+ */
+export function Choix(p: {
+  label: string
+  options: OptionChoix[]
+  value: string
+  onChange: (id: string) => void
+  placeholder?: string
+  titre?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [q, setQ] = useState('')
+  const cur = p.options.find((o) => o.id === p.value)
+  const liste = p.options.filter((o) => correspond(q, o.label, o.detail, o.recherche))
+  const choisir = (id: string) => {
+    p.onChange(id)
+    setOpen(false)
+    setQ('')
+  }
+  return (
+    <div className="choix">
+      <span className="choix-label">{p.label}</span>
+      <button type="button" className="choix-btn" onClick={() => setOpen(true)} aria-haspopup="dialog">
+        <span className={cur ? '' : 'muted'}>{cur ? cur.label : (p.placeholder ?? '— Choisir —')}</span>
+        {cur?.detail && <span className="muted small"> {cur.detail}</span>}
+        <span className="choix-fleche" aria-hidden>
+          ▾
+        </span>
+      </button>
+      {open && (
+        <Modal title={p.titre ?? p.label} onClose={() => setOpen(false)} wide>
+          <input
+            type="search"
+            autoFocus
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && liste.length === 1 && choisir(liste[0].id)}
+            placeholder="Rechercher…"
+          />
+          <ul className="pick-list">
+            {liste.map((o) => (
+              <li key={o.id}>
+                <button className={o.id === p.value ? 'on' : ''} onClick={() => choisir(o.id)}>
+                  <b>{o.label}</b>
+                  {o.detail && <span className="muted small"> {o.detail}</span>}
+                </button>
+              </li>
+            ))}
+            {liste.length === 0 && <li className="muted">Aucun résultat.</li>}
+            {p.value && (
+              <li>
+                <button className="muted" onClick={() => choisir('')}>
+                  Aucun (retirer le choix)
+                </button>
+              </li>
+            )}
+          </ul>
+        </Modal>
+      )}
+    </div>
   )
 }
 

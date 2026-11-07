@@ -26,6 +26,7 @@ export default function Referentiel() {
 
   const sups = useMemo(() => (pack?.superieurs ?? []).filter((x) => x.camp === camp), [pack, camp])
   const pouvoirs = useMemo(() => (pack?.pouvoirs ?? []).filter((x) => x.camp === camp), [pack, camp])
+  const nomSup = (id?: string) => (id ? pack?.superieurs.find((s) => s.id === id)?.nom : undefined)
   const lims = useMemo(() => (pack?.limitations ?? []).filter((x) => x.camp === camp), [pack, camp])
 
   if (!pack) {
@@ -72,7 +73,7 @@ export default function Referentiel() {
       </div>
 
       {onglet === 'superieurs' && <ListeSup items={sups.filter((x) => match(x.nom, x.titre, x.role, ...(x.pouvoirsPrivilegies ?? [])))} />}
-      {onglet === 'pouvoirs' && <ListePouvoirs items={pouvoirs.filter((x) => match(x.nom, x.rubrique, x.resume))} />}
+      {onglet === 'pouvoirs' && <ListePouvoirs items={pouvoirs.filter((x) => match(x.nom, x.rubrique, x.resume, nomSup(x.superieur)))} />}
       {onglet === 'talents' && <ListeTalents items={pack.talents.filter((x) => match(x.nom, x.resume))} />}
       {onglet === 'limitations' && <ListeLim items={lims.filter((x) => match(x.nom, x.resume))} />}
       {onglet === 'regles' && (
@@ -106,6 +107,7 @@ function ListeSup({ items }: { items: SuperieurRef[] }) {
 }
 
 function ListePouvoirs({ items }: { items: PouvoirRef[] }) {
+  const sups = useStore().pack?.superieurs ?? []
   if (!items.length) return <Empty>Rien à afficher (pas encore extrait, ou aucun résultat).</Empty>
   const rubriques = [...new Set(items.map((p) => p.rubrique ?? 'Divers'))]
   return (
@@ -119,7 +121,9 @@ function ListePouvoirs({ items }: { items: PouvoirRef[] }) {
               .map((p) => (
                 <details key={p.id} className="card ref-item">
                   <summary>
-                    <b>{p.nom}</b> <span className="muted small">{[p.d666, p.type, p.cout].filter(Boolean).join(' · ')}</span>
+                    <b>{p.nom}</b>
+                    {p.superieur && <span className="tag tag-prince">{sups.find((s) => s.id === p.superieur)?.nom ?? p.superieur}</span>}
+                    <span className="muted small">{[p.d666, p.type, p.cout].filter(Boolean).join(' · ')}</span>
                   </summary>
                   <FichePouvoir r={p} />
                 </details>

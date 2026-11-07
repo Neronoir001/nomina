@@ -9,6 +9,7 @@ import { FilePick, Modal, Seg } from '../../ui'
 import Identite from './Identite'
 import Pouvoirs from './Pouvoirs'
 import Serviteurs from './Serviteurs'
+import Suggestions from './Suggestions'
 import Superieur from './Superieur'
 import Talents from './Talents'
 
@@ -86,6 +87,7 @@ export default function Fiche() {
       {onglet === 'serviteurs' && <Serviteurs perso={perso} maj={maj} />}
 
       <p className="muted small center">Enregistré automatiquement sur cet appareil.</p>
+      <Suggestions camp={perso.camp} />
 
       {creation && (
         <Modal title="Nouveau personnage" onClose={() => setCreation(false)}>

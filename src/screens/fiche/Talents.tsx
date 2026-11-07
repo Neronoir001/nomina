@@ -7,6 +7,7 @@ import { useStore } from '../../lib/store'
 import { Area, Card, Info } from '../../ui'
 import { TableUM } from '../TableUM'
 import type { MajPerso } from './Fiche'
+import { LISTES } from './Suggestions'
 
 /** Liste affichée : talents du référentiel (fusionnés avec les valeurs du perso) + talents ajoutés. */
 function talentsAffiches(p: Personnage, refs: TalentRef[]): (TalentPerso & { ref?: TalentRef })[] {
@@ -84,7 +85,7 @@ export default function Talents({ perso: p, maj }: { perso: Personnage; maj: Maj
                 <div key={t.id} className={`talent-grid${focus === t.id ? ' focus' : ''}${t.niveau ? ' has-level' : ''}`} onClick={() => setFocus(t.id)}>
                   <span className="talent-name">
                     {libre ? (
-                      <input value={t.nom} onChange={(e) => upsert({ ...t, nom: e.target.value })} placeholder="Nom (spécialisation, langue…)" />
+                      <input list={LISTES.talents} value={t.nom} onChange={(e) => upsert({ ...t, nom: e.target.value })} placeholder="Nom (spécialisation, langue…)" />
                     ) : (
                       <>
                         {t.nom}

@@ -4,6 +4,7 @@ import type { Personnage, Serviteur } from '../../lib/personnage'
 import { nouveauServiteur } from '../../lib/personnage'
 import { Area, Card, Empty, Field } from '../../ui'
 import type { MajPerso } from './Fiche'
+import { LISTES } from './Suggestions'
 
 export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: MajPerso }) {
   const set = (id: string, f: (s: Serviteur) => Serviteur) => maj((x) => ({ ...x, serviteurs: x.serviteurs.map((s) => (s.id === id ? f(s) : s)) }))
@@ -31,7 +32,7 @@ export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: 
         >
           <div className="stack">
             <div className="grid2">
-              <Field label="Type" value={s.type} onChange={(v) => set(s.id, (x) => ({ ...x, type: v }))} placeholder="familier, humain, mort-vivant…" />
+              <Field label="Type" list={LISTES.typesServiteur} value={s.type} onChange={(v) => set(s.id, (x) => ({ ...x, type: v }))} placeholder="familier, humain, mort-vivant…" />
               <Field label="Nom" value={s.nom} onChange={(v) => set(s.id, (x) => ({ ...x, nom: v }))} />
             </div>
             <div className="grid-caracs">
@@ -51,7 +52,7 @@ export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: 
               <div className="sub-head">Talents</div>
               {s.talents.map((t, j) => (
                 <div key={j} className="row serv-row">
-                  <input className="grow" value={t.nom} placeholder="Talent" onChange={(e) => set(s.id, (x) => ({ ...x, talents: x.talents.map((y, k) => (k === j ? { ...y, nom: e.target.value } : y)) }))} />
+                  <input className="grow" list={LISTES.talents} value={t.nom} placeholder="Talent" onChange={(e) => set(s.id, (x) => ({ ...x, talents: x.talents.map((y, k) => (k === j ? { ...y, nom: e.target.value } : y)) }))} />
                   <input className="mini" value={t.niveau} placeholder="Niv" onChange={(e) => set(s.id, (x) => ({ ...x, talents: x.talents.map((y, k) => (k === j ? { ...y, niveau: e.target.value } : y)) }))} />
                   <input className="mini" value={t.carac} placeholder="Carac" onChange={(e) => set(s.id, (x) => ({ ...x, talents: x.talents.map((y, k) => (k === j ? { ...y, carac: e.target.value } : y)) }))} />
                   <input className="mini" value={t.exp} placeholder="Exp" onChange={(e) => set(s.id, (x) => ({ ...x, talents: x.talents.map((y, k) => (k === j ? { ...y, exp: e.target.value } : y)) }))} />
@@ -69,7 +70,7 @@ export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: 
               <div className="sub-head">Pouvoirs</div>
               {s.pouvoirs.map((pw, j) => (
                 <div key={j} className="row serv-row">
-                  <input className="grow" value={pw.nom} placeholder="Pouvoir" onChange={(e) => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.map((y, k) => (k === j ? { ...y, nom: e.target.value } : y)) }))} />
+                  <input className="grow" list={LISTES.pouvoirs} value={pw.nom} placeholder="Pouvoir" onChange={(e) => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.map((y, k) => (k === j ? { ...y, nom: e.target.value } : y)) }))} />
                   <input className="mini" value={pw.pp} placeholder="PP" onChange={(e) => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.map((y, k) => (k === j ? { ...y, pp: e.target.value } : y)) }))} />
                   <input className="grow" value={pw.notes} placeholder="Notes" onChange={(e) => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.map((y, k) => (k === j ? { ...y, notes: e.target.value } : y)) }))} />
                   <button className="icon-btn" onClick={() => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.filter((_, k) => k !== j) }))} title="Retirer">

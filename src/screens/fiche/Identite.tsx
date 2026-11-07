@@ -5,6 +5,7 @@ import { useStore } from '../../lib/store'
 import { Area, Card, Field, Seg, Stepper } from '../../ui'
 import { TableUM } from '../TableUM'
 import type { MajPerso } from './Fiche'
+import { ChoixSuperieur } from './Superieur'
 
 const DESCRIPTION: { k: keyof Personnage['description']; label: string }[] = [
   { k: 'taille', label: 'Taille' },
@@ -43,25 +44,16 @@ export default function Identite({ perso: p, maj }: { perso: Personnage; maj: Ma
             <Field label="Nom" value={p.identite.nom} onChange={(v) => setId('nom', v)} />
             <Field label="Grade" value={p.identite.grade} onChange={(v) => setId('grade', v)} />
           </div>
-          <label>
-            Supérieur
-            {superieurs.length > 0 ? (
-              <select value={p.identite.superieurId} onChange={(e) => setId('superieurId', e.target.value)}>
-                <option value="">— Choisir —</option>
-                {superieurs.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nom}, {s.titre}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                value={p.identite.superieurLibre}
-                onChange={(e) => setId('superieurLibre', e.target.value)}
-                placeholder={p.camp === 'INS' ? 'Prince-Démon' : 'Archange'}
-              />
-            )}
-          </label>
+          {superieurs.length > 0 ? (
+            <ChoixSuperieur perso={p} maj={maj} />
+          ) : (
+            <Field
+              label="Supérieur"
+              value={p.identite.superieurLibre}
+              onChange={(v) => setId('superieurLibre', v)}
+              placeholder={p.camp === 'INS' ? 'Prince-Démon' : 'Archange'}
+            />
+          )}
           {superieurs.length === 0 && <p className="muted small">Installe le référentiel pour choisir dans la liste (onglet Réglages).</p>}
         </div>
       </Card>

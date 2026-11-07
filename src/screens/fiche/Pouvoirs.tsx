@@ -3,24 +3,23 @@ import type { LimitationRef, PouvoirRef } from '../../lib/pack'
 import type { LimitationPerso, Personnage, PouvoirPerso } from '../../lib/personnage'
 import { nouveauPouvoir } from '../../lib/personnage'
 import { uid } from '../../lib/storage'
+import { norm } from '../../lib/texte'
 import { useStore } from '../../lib/store'
 import { Area, Card, Empty, Info, Modal } from '../../ui'
 import { FichePouvoir } from '../referentiel/Details'
 import type { MajPerso } from './Fiche'
+import { LISTES } from './Suggestions'
 
-const COLS: { k: keyof PouvoirPerso; label: string; w?: string }[] = [
-  { k: 'type', label: 'Type' },
+const COLS: { k: keyof PouvoirPerso; label: string; list?: string }[] = [
+  { k: 'type', label: 'Type', list: LISTES.typesPouvoir },
   { k: 'cout', label: 'Coût' },
   { k: 'niveau', label: 'Niv.' },
-  { k: 'portee', label: 'Portée' },
-  { k: 'att', label: 'Att.' },
+  { k: 'portee', label: 'Portée', list: LISTES.portees },
+  { k: 'att', label: 'Att.', list: LISTES.caracs },
   { k: 'def', label: 'Déf.' },
   { k: 'num', label: 'Num' },
 ]
 
-function norm(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-}
 
 export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: MajPerso }) {
   const pack = useStore().pack
@@ -38,6 +37,25 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
     if (r) Object.assign(np, { refId: r.id, nom: r.nom, type: r.type ?? '', cout: r.cout ?? '', portee: r.portee ?? '', att: r.carac ?? '', def: r.defense ?? '', num: r.d666 ?? '' })
     maj((x) => ({ ...x, pouvoirs: [...x.pouvoirs, np] }))
     setChoix(null)
+  }
+  /** Si le nom tapé correspond exactement à un pouvoir du référentiel, on complète les cases vides. */
+  const nommerPouvoir = (pw: PouvoirPerso, nom: string) => {
+    const r = pack?.pouvoirs.find((x) => x.camp === p.camp && norm(x.nom) === norm(nom))
+    if (!r) return setPouvoir(pw.id, { nom, refId: pw.refId && pack?.pouvoirs.find((x) => x.id === pw.refId)?.nom === nom ? pw.refId : undefined })
+    setPouvoir(pw.id, {
+      nom: r.nom,
+      refId: r.id,
+      type: pw.type || r.type || '',
+      cout: pw.cout || r.cout || '',
+      portee: pw.portee || r.portee || '',
+      att: pw.att || r.carac || '',
+      def: pw.def || r.defense || '',
+      num: pw.num || r.d666 || '',
+    })
+  }
+  const nommerLim = (id: string, nom: string) => {
+    const r = pack?.limitations.find((x) => x.camp === p.camp && norm(x.nom) === norm(nom))
+    setLim(id, r ? { nom: r.nom, refId: r.id } : { nom, refId: undefined })
   }
   const ajouterLim = (r?: LimitationRef) => {
     maj((x) => ({ ...x, limitations: [...x.limitations, { id: uid(), refId: r?.id, nom: r?.nom ?? '', notes: '' }] }))
@@ -68,7 +86,8 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
             return (
               <div key={pw.id} className="pouvoir-row">
                 <div className="row">
-                  <input className="pouvoir-nom" value={pw.nom} onChange={(e) => setPouvoir(pw.id, { nom: e.target.value })} placeholder="Nom du pouvoir" aria-label="Nom du pouvoir" />
+                  <input className="pouvoir-nom" list={LISTES.pouvoirs} value={pw.nom} onChange={(e) => nommerPouvoir(pw, e.target.value)} placeholder="Nom du pouvoir (suggestions en tapant)" aria-label="Nom du pouvoir" />
+                  {ref?.superieur && <span className="tag tag-prince">{pack?.superieurs.find((s) => s.id === ref.superieur)?.nom}</span>}
                   {privilegies.has(norm(pw.nom)) && <span className="tag" title="Pouvoir privilégié de ton supérieur">privilégié</span>}
                   {ref && (
                     <Info title={ref.nom}>
@@ -87,7 +106,7 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
                   {COLS.map((c) => (
                     <label key={c.k}>
                       {c.label}
-                      <input value={pw[c.k] as string} onChange={(e) => setPouvoir(pw.id, { [c.k]: e.target.value })} />
+                      <input list={c.list} value={pw[c.k] as string} onChange={(e) => setPouvoir(pw.id, { [c.k]: e.target.value })} />
                     </label>
                   ))}
                 </div>
@@ -118,7 +137,7 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
           const ref = l.refId ? pack?.limitations.find((r) => r.id === l.refId) : undefined
           return (
             <div key={l.id} className="row lim-row">
-              <input value={l.nom} onChange={(e) => setLim(l.id, { nom: e.target.value })} placeholder="Limitation" className="grow" />
+              <input list={LISTES.limitations} value={l.nom} onChange={(e) => nommerLim(l.id, e.target.value)} placeholder="Limitation" className="grow" />
               {ref?.resume && (
                 <Info title={ref.nom}>
                   <p>{ref.resume}</p>
@@ -142,7 +161,7 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
         <Chooser
           title="Ajouter un pouvoir"
           items={pack.pouvoirs.filter((r) => r.camp === p.camp)}
-          sub={(r) => [r.rubrique, r.cout, r.type].filter(Boolean).join(' · ')}
+          sub={(r) => [r.superieur ? `Pouvoir de ${pack.superieurs.find((s) => s.id === r.superieur)?.nom ?? r.superieur}` : r.rubrique, r.cout, r.type].filter(Boolean).join(' · ')}
           mark={(r) => privilegies.has(norm(r.nom)) || r.superieur === p.identite.superieurId}
           onPick={ajouterPouvoir}
           onClose={() => setChoix(null)}
