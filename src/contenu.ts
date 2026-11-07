@@ -44,6 +44,16 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.4.0',
+    date: '8 novembre 2026',
+    points: [
+      'Conversations de groupe : touche « ＋ 👥 Groupe » dans Messages, donne un nom et choisis les membres. Seuls les membres reçoivent les messages.',
+      'Pour chaque message envoyé à un groupe, tu vois combien de membres l’ont reçu.',
+      'Supprimer un message : touche-le puis « Supprimer ». Supprimer une conversation ou quitter un groupe : bouton ⋯ en haut de la conversation.',
+      'Attention : une suppression ne vaut que pour ton appareil, les autres gardent leur copie.',
+    ],
+  },
+  {
     version: '0.3.0',
     date: '7 novembre 2026',
     points: [

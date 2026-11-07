@@ -3,7 +3,7 @@ import { clear, createStore, getMany, set as idbSet } from 'idb-keyval'
 import type { Pack } from './pack'
 import type { Personnage } from './personnage'
 import { depuisFicheProto, nomAffiche, normaliser, nouveauPersonnage } from './personnage'
-import type { ChatMessage, Contact, FicheRecue, LogLine, Peer, Profile, RelayKind, Signalement, TableInfo } from './types'
+import type { ChatMessage, Contact, FicheRecue, Groupe, LogLine, Peer, Profile, RelayKind, Signalement, TableInfo } from './types'
 
 export type Status = 'deconnecte' | 'connexion' | 'connecte' | 'erreur'
 
@@ -21,7 +21,11 @@ export type State = {
   peers: Record<string, Peer>
   contacts: Record<string, Contact>
   messages: ChatMessage[]
+  /** Non lus, par conversation */
   unread: Record<string, number>
+  groupes: Record<string, Groupe>
+  /** Groupes quittés : on ignore ce qui en arrive encore */
+  groupesQuittes: string[]
   fichesRecues: Record<string, FicheRecue>
   sheetAckAt: number | null
   preferredRelay: RelayKind
@@ -40,6 +44,7 @@ export type State = {
 const PERSISTED = [
   'profile', 'personnages', 'actifId', 'pack', 'signalements', 'table', 'contacts', 'messages', 'unread',
   'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues',
+  'groupes', 'groupesQuittes',
 ] as const
 type PersistedKey = (typeof PERSISTED)[number]
 
@@ -58,6 +63,8 @@ let state: State = {
   contacts: {},
   messages: [],
   unread: {},
+  groupes: {},
+  groupesQuittes: [],
   fichesRecues: {},
   sheetAckAt: null,
   preferredRelay: 'nostr',
@@ -262,6 +269,23 @@ async function chargerDonnees(): Promise<void> {
         .filter(([, v]) => v && typeof v === 'object')
         .map(([k, v]) => [k, normaliser(v)]),
     )
+  }
+  // Messages des versions 0.1 à 0.3 : ajout de la conversation et des accusés de réception
+  const moi = loaded.profile?.deviceId
+  if (Array.isArray(loaded.messages) && moi) {
+    loaded.messages = loaded.messages
+      .filter((m) => m && typeof m === 'object' && m.id)
+      .map((m) => {
+        if (m.conv) return m
+        const ancien = m as ChatMessage & { to?: string; status?: string }
+        const autre = ancien.from === moi ? (ancien.to ?? '') : ancien.from
+        if (ancien.from !== moi) return { id: m.id, conv: `d:${autre}`, from: m.from, text: m.text, at: m.at }
+        const recu = ancien.status === 'recu'
+        return { id: m.id, conv: `d:${autre}`, from: m.from, text: m.text, at: m.at, enAttente: recu ? [] : [autre], recus: recu ? [autre] : [] }
+      })
+  }
+  if (loaded.unread) {
+    loaded.unread = Object.fromEntries(Object.entries(loaded.unread).map(([k, v]) => [k.includes(':') ? k : `d:${k}`, v]))
   }
   if (loaded.actifId && !loaded.personnages?.[loaded.actifId]) loaded.actifId = Object.keys(loaded.personnages ?? {})[0] ?? null
 

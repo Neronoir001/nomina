@@ -138,3 +138,20 @@ input.center { text-align: center; }
 .apercu-messages li { overflow: hidden; text-overflow: ellipsis; }
 .nouveautes ul { margin: .3rem 0 .6rem; padding-left: 1.2rem; display: flex; flex-direction: column; gap: .3rem; }
 .stack-sm { display: flex; flex-direction: column; gap: .2rem; }
+
+/* Messagerie : groupes et suppression */
+.avatar-grp { font-size: 1.1rem; width: 22px; text-align: center; flex: none; }
+.contact-texte { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.contact-texte .apercu { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thread-titre { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.membres { display: flex; flex-wrap: wrap; gap: .3rem .8rem; font-size: .85rem; color: var(--muted); }
+.membre { display: inline-flex; align-items: center; gap: .3rem; }
+.bubble-wrap { display: flex; flex-direction: column; max-width: 82%; }
+.bubble-wrap.mine { align-self: flex-end; align-items: flex-end; }
+.bubble-wrap.theirs { align-self: flex-start; align-items: flex-start; }
+button.bubble { font: inherit; color: var(--text); border: 0; text-align: left; cursor: pointer; max-width: 100%; }
+.bubble.sel { outline: 2px solid var(--gold); }
+.bubble .auteur { font-size: .75rem; font-weight: 700; color: var(--gold); margin-bottom: .1rem; }
+.bubble-actions { display: flex; gap: .8rem; padding: .2rem .3rem; }
+.link.danger { color: #ff9d97; }
+.choix-membres .choice { justify-content: flex-start; }

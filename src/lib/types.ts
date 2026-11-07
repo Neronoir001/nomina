@@ -35,11 +35,26 @@ export type Contact = {
 
 export type ChatMessage = {
   id: string
+  /** Conversation : « d:<appareil> » pour un échange à deux, « g:<groupe> » pour un groupe */
+  conv: string
   from: string
-  to: string
   text: string
   at: number
-  status: 'en-attente' | 'envoye' | 'recu'
+  /** Messages envoyés : destinataires qui n'ont pas encore confirmé la réception */
+  enAttente?: string[]
+  /** Messages envoyés : destinataires qui ont confirmé la réception */
+  recus?: string[]
+}
+
+export type Groupe = {
+  id: string
+  nom: string
+  /** Appareils membres (créateur compris) */
+  membres: string[]
+  /** Noms des membres, pour afficher ceux qu'on n'a jamais croisés à la table */
+  noms: Record<string, string>
+  createur: string
+  majLe: number
 }
 
 export type FicheRecue = {

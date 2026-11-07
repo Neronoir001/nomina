@@ -9,14 +9,14 @@ import { isPack } from './pack'
 import type { Personnage } from './personnage'
 import { normaliser } from './personnage'
 import { persoActif } from './store'
-import type { ChatMessage, Peer, Profile, RelayKind, Role, TableInfo } from './types'
+import type { ChatMessage, Groupe, Peer, Profile, RelayKind, Role, TableInfo } from './types'
 import { RELAYS } from './types'
 
 const APP_ID = 'nomina-insmv'
 
 type RelayModule = { joinRoom: JoinRoom; getRelaySockets?: () => unknown }
 type Hello = { deviceId: string; name: string; role: Role; version: string }
-type MsgPayload = { id: string; text: string; at: number; from: string }
+type MsgPayload = { id: string; text: string; at: number; from: string; conv?: string; groupe?: Groupe }
 
 type Actions = {
   hello: MessageAction<JsonValue>
@@ -26,6 +26,8 @@ type Actions = {
   sheetAck: MessageAction<JsonValue>
   ref: MessageAction<JsonValue>
   refAck: MessageAction<JsonValue>
+  grp: MessageAction<JsonValue>
+  grpQuit: MessageAction<JsonValue>
 }
 
 let room: Room | null = null
@@ -157,25 +159,58 @@ function makeActions(r: Room): Actions {
     sheetAck: r.makeAction<JsonValue>('sheet-ack'),
     ref: r.makeAction<JsonValue>('referentiel'),
     refAck: r.makeAction<JsonValue>('ref-ack'),
+    grp: r.makeAction<JsonValue>('grp'),
+    grpQuit: r.makeAction<JsonValue>('grp-quit'),
   }
 
   a.hello.onMessage = (d, { peerId }) => onHello(d as unknown as Hello, peerId)
 
   a.msg.onMessage = (d, { peerId }) => {
     const m = d as unknown as MsgPayload
-    const mine = me().deviceId
+    const conv = m.conv ?? `d:${m.from}`
+    if (conv.startsWith('g:')) {
+      const gid = conv.slice(2)
+      if (getState().groupesQuittes.includes(gid)) {
+        // Groupe quitté : on le rappelle à l'expéditeur au lieu d'afficher le message
+        void a.grpQuit.send({ id: gid, deviceId: me().deviceId }, { target: peerId })
+        void a.msgAck.send({ id: m.id }, { target: peerId })
+        return
+      }
+      if (m.groupe) recevoirGroupe(m.groupe)
+    }
     setState((s) => {
       if (s.messages.some((x) => x.id === m.id)) return {}
-      const msg: ChatMessage = { id: m.id, from: m.from, to: mine, text: m.text, at: m.at, status: 'recu' }
-      return { messages: [...s.messages, msg], unread: { ...s.unread, [m.from]: (s.unread[m.from] ?? 0) + 1 } }
+      const msg: ChatMessage = { id: m.id, conv, from: m.from, text: m.text, at: m.at }
+      return { messages: [...s.messages, msg], unread: { ...s.unread, [conv]: (s.unread[conv] ?? 0) + 1 } }
     })
     navigator.vibrate?.(60)
     void a.msgAck.send({ id: m.id }, { target: peerId })
   }
 
-  a.msgAck.onMessage = (d) => {
+  a.msgAck.onMessage = (d, { peerId }) => {
     const { id } = d as { id: string }
-    setState((s) => ({ messages: s.messages.map((m) => (m.id === id ? { ...m, status: 'recu' } : m)) }))
+    const dev = getState().peers[peerId]?.deviceId
+    if (!dev) return
+    setState((s) => ({
+      messages: s.messages.map((m) =>
+        m.id === id ? { ...m, enAttente: (m.enAttente ?? []).filter((x) => x !== dev), recus: [...new Set([...(m.recus ?? []), dev])] } : m,
+      ),
+    }))
+  }
+
+  a.grp.onMessage = (d) => recevoirGroupe(d as unknown as Groupe)
+
+  a.grpQuit.onMessage = (d) => {
+    const { id, deviceId } = d as { id: string; deviceId: string }
+    const g = getState().groupes[id]
+    if (!g || !g.membres.includes(deviceId)) return
+    const nom = g.noms[deviceId] ?? getState().contacts[deviceId]?.name ?? 'Un membre'
+    majGroupe({ ...g, membres: g.membres.filter((x) => x !== deviceId), majLe: Date.now() }, false)
+    // Les messages en attente pour ce membre ne lui seront plus envoyés
+    setState((s) => ({
+      messages: s.messages.map((m) => (m.conv === `g:${id}` ? { ...m, enAttente: (m.enAttente ?? []).filter((x) => x !== deviceId) } : m)),
+    }))
+    log(`${nom} a quitté le groupe « ${g.nom} ».`)
   }
 
   a.sheet.onMessage = (d, { peerId }) => {
@@ -230,9 +265,13 @@ function onHello(h: Hello, peerId: string): void {
   })
   log(`${h.name} (${roleLabel(h.role)}) est connecté.`, 'ok')
 
-  // Messages en attente pour cet appareil
+  // Groupes dont il fait partie, puis messages en attente pour lui
+  for (const g of Object.values(getState().groupes)) {
+    if (g.membres.includes(h.deviceId)) void A?.grp.send(g as unknown as JsonValue, { target: peerId })
+  }
+  const moi = me().deviceId
   for (const m of getState().messages) {
-    if (m.to === h.deviceId && m.status === 'en-attente') void transmit(m, peerId)
+    if (m.from === moi && m.enAttente?.includes(h.deviceId)) void transmit(m, h.deviceId)
   }
   // Un joueur envoie automatiquement sa fiche au MJ
   if (me().role === 'joueur' && h.role === 'mj') void sendSheet([peerId])
@@ -242,27 +281,121 @@ function onHello(h: Hello, peerId: string): void {
 
 // ───────────────────────── Messagerie ─────────────────────────
 
-export async function sendMessage(to: string, text: string): Promise<void> {
-  const m: ChatMessage = { id: uid(), from: me().deviceId, to, text, at: Date.now(), status: 'en-attente' }
-  setState((s) => ({ messages: [...s.messages, m] }))
-  const pid = peerIdFor(to)
-  if (pid) await transmit(m, pid)
+export function convDirecte(deviceId: string): string {
+  return `d:${deviceId}`
 }
 
-async function transmit(m: ChatMessage, peerId: string): Promise<void> {
-  if (!A) return
+/** Appareils qui doivent recevoir les messages d'une conversation (sauf soi-même). */
+export function destinataires(conv: string): string[] {
+  const moi = me().deviceId
+  if (conv.startsWith('d:')) return [conv.slice(2)]
+  const g = getState().groupes[conv.slice(2)]
+  return (g?.membres ?? []).filter((x) => x !== moi)
+}
+
+export function nomDe(deviceId: string, groupe?: Groupe): string {
+  if (deviceId === getState().profile?.deviceId) return 'Moi'
+  return getState().contacts[deviceId]?.name ?? groupe?.noms[deviceId] ?? '?'
+}
+
+export async function sendMessage(conv: string, text: string): Promise<void> {
+  const dest = destinataires(conv)
+  const m: ChatMessage = { id: uid(), conv, from: me().deviceId, text, at: Date.now(), enAttente: dest, recus: [] }
+  setState((s) => ({ messages: [...s.messages, m] }))
+  for (const d of dest) void transmit(m, d)
+}
+
+async function transmit(m: ChatMessage, deviceId: string): Promise<void> {
+  const pid = peerIdFor(deviceId)
+  if (!A || !pid) return
+  const groupe = m.conv.startsWith('g:') ? getState().groupes[m.conv.slice(2)] : undefined
+  const payload: MsgPayload = { id: m.id, text: m.text, at: m.at, from: m.from }
+  if (groupe) Object.assign(payload, { conv: m.conv, groupe })
   try {
-    await A.msg.send({ id: m.id, text: m.text, at: m.at, from: m.from }, { target: peerId })
-    setState((s) => ({
-      messages: s.messages.map((x) => (x.id === m.id && x.status === 'en-attente' ? { ...x, status: 'envoye' } : x)),
-    }))
+    await A.msg.send(payload as unknown as JsonValue, { target: pid })
   } catch (e) {
     log(`Message non envoyé : ${String(e)}`, 'erreur')
   }
 }
 
-export function markRead(deviceId: string): void {
-  if (getState().unread[deviceId]) setState((s) => ({ unread: { ...s.unread, [deviceId]: 0 } }))
+export function markRead(conv: string): void {
+  if (getState().unread[conv]) setState((s) => ({ unread: { ...s.unread, [conv]: 0 } }))
+}
+
+export function supprimerMessage(id: string): void {
+  setState((s) => ({ messages: s.messages.filter((m) => m.id !== id) }))
+}
+
+/** Supprime une conversation de CET appareil (les autres gardent leur copie). Pour un groupe : le quitte aussi. */
+export function supprimerConversation(conv: string): void {
+  if (conv.startsWith('g:')) quitterGroupe(conv.slice(2))
+  setState((s) => {
+    const unread = { ...s.unread }
+    delete unread[conv]
+    return { messages: s.messages.filter((m) => m.conv !== conv), unread }
+  })
+}
+
+// ───────────────────────── Groupes ─────────────────────────
+
+function envoyerGroupe(g: Groupe, cibles = g.membres): void {
+  if (!A) return
+  const moi = me().deviceId
+  const pids = cibles.filter((d) => d !== moi).map(peerIdFor).filter(Boolean) as string[]
+  if (pids.length) void A.grp.send(g as unknown as JsonValue, { target: pids })
+}
+
+function majGroupe(g: Groupe, diffuser = true, cibles?: string[]): void {
+  setState((s) => ({ groupes: { ...s.groupes, [g.id]: g } }))
+  if (diffuser) envoyerGroupe(g, cibles)
+}
+
+function recevoirGroupe(g: Groupe): void {
+  if (!g?.id || !Array.isArray(g.membres)) return
+  const st = getState()
+  if (st.groupesQuittes.includes(g.id)) return
+  const cur = st.groupes[g.id]
+  if (cur && cur.majLe >= g.majLe) return
+  if (!cur && !g.membres.includes(me().deviceId)) return
+  majGroupe({ ...g, noms: { ...(cur?.noms ?? {}), ...g.noms } }, false)
+  if (!cur) log(`Tu as été ajouté au groupe « ${g.nom} ».`, 'ok')
+}
+
+export function creerGroupe(nom: string, membres: string[]): string {
+  const p = me()
+  const tous = [...new Set([p.deviceId, ...membres])]
+  const noms: Record<string, string> = { [p.deviceId]: p.name }
+  for (const d of membres) noms[d] = getState().contacts[d]?.name ?? '?'
+  const g: Groupe = { id: uid(), nom: nom.trim() || 'Groupe', membres: tous, noms, createur: p.deviceId, majLe: Date.now() }
+  majGroupe(g)
+  return `g:${g.id}`
+}
+
+export function ajouterMembres(gid: string, nouveaux: string[]): void {
+  const g = getState().groupes[gid]
+  if (!g) return
+  const noms = { ...g.noms }
+  for (const d of nouveaux) noms[d] = getState().contacts[d]?.name ?? noms[d] ?? '?'
+  majGroupe({ ...g, membres: [...new Set([...g.membres, ...nouveaux])], noms, majLe: Date.now() })
+}
+
+export function renommerGroupe(gid: string, nom: string): void {
+  const g = getState().groupes[gid]
+  if (g && nom.trim()) majGroupe({ ...g, nom: nom.trim(), majLe: Date.now() })
+}
+
+export function quitterGroupe(gid: string): void {
+  const g = getState().groupes[gid]
+  const moi = me().deviceId
+  if (g) {
+    const restant = { ...g, membres: g.membres.filter((x) => x !== moi), majLe: Date.now() }
+    envoyerGroupe(restant, g.membres)
+  }
+  setState((s) => {
+    const groupes = { ...s.groupes }
+    delete groupes[gid]
+    return { groupes, groupesQuittes: [...new Set([...s.groupesQuittes, gid])] }
+  })
 }
 
 // ───────────────────────── Fiches ─────────────────────────
