@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { isStandalone } from '../lib/install'
 import { probePeers, roleLabel } from '../lib/p2p'
-import { heure, useStore } from '../lib/store'
+import { heure, toutEffacer, useStore } from '../lib/store'
 import { RELAYS } from '../lib/types'
 
 type StorageInfo = { persisted: boolean | null; usage: number | null; quota: number | null }
@@ -142,15 +142,8 @@ export default function Diagnostic() {
         <button
           className="btn btn-danger"
           onClick={() => {
-            if (confirm('Effacer toutes les données de Nomina sur cet appareil (profil, fiche, messages) ?')) {
-              try {
-                Object.keys(localStorage)
-                  .filter((k) => k.startsWith('nomina:'))
-                  .forEach((k) => localStorage.removeItem(k))
-              } catch {
-                /* ignoré */
-              }
-              location.reload()
+            if (confirm("Effacer toutes les données de Nomina sur cet appareil (profil, personnages, référentiel, messages) ?\n\nConseil : fais d'abord une sauvegarde (Réglages).")) {
+              void toutEffacer().then(() => location.reload())
             }
           }}
         >

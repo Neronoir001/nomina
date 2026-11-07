@@ -1,19 +1,21 @@
-{
+﻿{
   "name": "nomina",
   "private": true,
-  "version": "0.1.0",
-  "description": "Nomina — fiches de personnages INS/MV 3e édition (prototype de synchronisation)",
+  "version": "0.2.0",
+  "description": "Nomina â€” fiches de personnages INS/MV 3e Ã©dition (prototype de synchronisation)",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "icons": "node scripts/make-icons.mjs"
+    "icons": "node scripts/make-icons.mjs",
+    "pack": "node scripts/build-pack.mjs"
   },
   "dependencies": {
     "@trystero-p2p/mqtt": "^0.26.0",
     "@trystero-p2p/nostr": "^0.26.0",
     "@trystero-p2p/torrent": "^0.26.0",
+    "idb-keyval": "^6.3.0",
     "qr-scanner": "^1.4.2",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",

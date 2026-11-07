@@ -2,15 +2,17 @@ import { useState } from 'react'
 import { InstallBanner, StatusPill, UpdatePrompt } from './components'
 import { parseJoin } from './lib/codes'
 import { roleLabel } from './lib/p2p'
-import { useStore } from './lib/store'
+import { log, setState, useStore } from './lib/store'
 import type { TableInfo } from './lib/types'
-import Diagnostic from './screens/Diagnostic'
-import Fiche from './screens/Fiche'
+import Fiche from './screens/fiche/Fiche'
 import Messages from './screens/Messages'
 import Profil from './screens/Profil'
+import Referentiel from './screens/referentiel/Referentiel'
+import Reglages from './screens/Reglages'
 import Table from './screens/Table'
+import { Modal } from './ui'
 
-type Tab = 'fiche' | 'table' | 'messages' | 'diagnostic'
+type Tab = 'fiche' | 'referentiel' | 'table' | 'messages' | 'reglages'
 
 function readPendingJoin(): TableInfo | null {
   const info = parseJoin(location.hash)
@@ -24,6 +26,13 @@ export default function App() {
   const [tab, setTab] = useState<Tab>(pendingJoin ? 'table' : 'fiche')
   const [editProfile, setEditProfile] = useState(false)
 
+  if (!s.hydrated) {
+    return (
+      <div className="welcome">
+        <img className="hero-icon pulse" src={`${import.meta.env.BASE_URL}icon-192.png`} alt="Chargement de Nomina" width={96} height={96} />
+      </div>
+    )
+  }
   if (!s.profile) return <Profil first />
 
   const unread = Object.values(s.unread).reduce((a, b) => a + b, 0)
@@ -46,19 +55,52 @@ export default function App() {
 
       <main className="content">
         {tab === 'fiche' && <Fiche />}
+        {tab === 'referentiel' && <Referentiel />}
         {tab === 'table' && <Table pendingJoin={pendingJoin} clearPending={() => setPendingJoin(null)} />}
         {tab === 'messages' && <Messages />}
-        {tab === 'diagnostic' && <Diagnostic />}
+        {tab === 'reglages' && <Reglages />}
       </main>
 
       <nav className="tabbar">
         <TabButton id="fiche" cur={tab} set={setTab} label="Fiche" icon="📜" />
+        <TabButton id="referentiel" cur={tab} set={setTab} label="Référentiel" icon="📚" />
         <TabButton id="table" cur={tab} set={setTab} label="Table" icon="🕯️" />
         <TabButton id="messages" cur={tab} set={setTab} label="Messages" icon="✉️" badge={unread} />
-        <TabButton id="diagnostic" cur={tab} set={setTab} label="Diagnostic" icon="🩺" />
+        <TabButton id="reglages" cur={tab} set={setTab} label="Réglages" icon="⚙️" />
       </nav>
 
       {editProfile && <Profil onClose={() => setEditProfile(false)} />}
+
+      {s.packPropose && (
+        <Modal title="Référentiel proposé" onClose={() => setState({ packPropose: null })}>
+          <div className="stack">
+            <p>
+              {s.packPropose.de} t'envoie le référentiel <b>« {s.packPropose.pack.titre} »</b> (version {s.packPropose.pack.version}).
+            </p>
+            {s.pack && (
+              <p className="muted small">
+                Il remplacera celui installé actuellement (version {s.pack.version}). Tes personnages ne sont pas modifiés.
+              </p>
+            )}
+            <div className="row">
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  const pack = s.packPropose!.pack
+                  setState({ pack, packPropose: null })
+                  log(`Référentiel « ${pack.titre} » v${pack.version} installé.`, 'ok')
+                }}
+              >
+                Installer
+              </button>
+              <button className="btn" onClick={() => setState({ packPropose: null })}>
+                Plus tard
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       <UpdatePrompt />
     </div>
   )

@@ -1,0 +1,130 @@
+import type { SuperieurRef } from '../../lib/pack'
+import type { Personnage } from '../../lib/personnage'
+import { uid } from '../../lib/storage'
+import { useStore } from '../../lib/store'
+import { Area, Card, Empty, Field } from '../../ui'
+import { FicheSuperieur } from '../referentiel/Details'
+import type { MajPerso } from './Fiche'
+
+export default function Superieur({ perso: p, maj }: { perso: Personnage; maj: MajPerso }) {
+  const pack = useStore().pack
+  const superieurs = pack?.superieurs.filter((s) => s.camp === p.camp) ?? []
+  const sup = superieurs.find((s) => s.id === p.identite.superieurId)
+  const libelle = p.camp === 'INS' ? 'Prince-Démon' : 'Archange'
+
+  const choisir = (id: string) => {
+    const s = superieurs.find((x) => x.id === id)
+    maj((x) => {
+      const n = { ...x, identite: { ...x.identite, superieurId: id } }
+      // Remplissage automatique des cases encore vides
+      if (s && !x.invocation.possibilite && s.intervention != null) n.invocation = { ...x.invocation, possibilite: String(s.intervention) }
+      if (s && x.recuperation.length === 0 && s.recuperation?.length)
+        n.recuperation = s.recuperation.map((r) => ({ id: uid(), texte: r.condition, nombre: r.gain }))
+      return n
+    })
+  }
+
+  const reprendre = (s: SuperieurRef) =>
+    maj((x) => ({
+      ...x,
+      invocation: { ...x.invocation, possibilite: s.intervention != null ? String(s.intervention) : x.invocation.possibilite },
+      recuperation: (s.recuperation ?? []).map((r) => ({ id: uid(), texte: r.condition, nombre: r.gain })),
+    }))
+
+  const setRecup = (id: string, patch: Partial<Personnage['recuperation'][number]>) =>
+    maj((x) => ({ ...x, recuperation: x.recuperation.map((r) => (r.id === id ? { ...r, ...patch } : r)) }))
+  const setGrade = (id: string, texte: string) => maj((x) => ({ ...x, pouvoirsGrade: x.pouvoirsGrade.map((g) => (g.id === id ? { ...g, texte } : g)) }))
+  const ajouterGrade = (texte = '') => maj((x) => ({ ...x, pouvoirsGrade: [...x.pouvoirsGrade, { id: uid(), texte }] }))
+
+  return (
+    <div className="stack">
+      <Card title={libelle}>
+        {superieurs.length > 0 ? (
+          <label>
+            Supérieur
+            <select value={p.identite.superieurId} onChange={(e) => choisir(e.target.value)}>
+              <option value="">— Choisir —</option>
+              {superieurs.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.nom}, {s.titre}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <Field label="Supérieur" value={p.identite.superieurLibre} onChange={(v) => maj((x) => ({ ...x, identite: { ...x.identite, superieurLibre: v } }))} />
+        )}
+        {sup && (
+          <details className="sup-details">
+            <summary>Tout savoir sur {sup.nom}</summary>
+            <FicheSuperieur s={sup} />
+          </details>
+        )}
+      </Card>
+
+      <Card title="Invocation de son supérieur" actions={sup && <button className="link small" onClick={() => reprendre(sup)}>Reprendre du référentiel</button>}>
+        <div className="stack">
+          <Field label="Possibilité d'intervention" value={p.invocation.possibilite} onChange={(v) => maj((x) => ({ ...x, invocation: { ...x.invocation, possibilite: v } }))} inputMode="numeric" />
+          <Area label="Notes" value={p.invocation.notes} onChange={(v) => maj((x) => ({ ...x, invocation: { ...x.invocation, notes: v } }))} rows={2} />
+        </div>
+      </Card>
+
+      <Card title="Récupération des PP">
+        {p.recuperation.length === 0 && <Empty>{sup ? 'Choisis ton supérieur ou utilise « Reprendre du référentiel ».' : 'Aucune ligne.'}</Empty>}
+        {p.recuperation.map((r) => (
+          <div key={r.id} className="row recup-row">
+            <input className="grow" value={r.texte} onChange={(e) => setRecup(r.id, { texte: e.target.value })} placeholder="Condition" />
+            <input className="mini" value={r.nombre} onChange={(e) => setRecup(r.id, { nombre: e.target.value })} placeholder="+1" aria-label="Nombre" />
+            <button className="icon-btn" title="Retirer" onClick={() => maj((x) => ({ ...x, recuperation: x.recuperation.filter((y) => y.id !== r.id) }))}>
+              ✕
+            </button>
+          </div>
+        ))}
+        <button className="link small" onClick={() => maj((x) => ({ ...x, recuperation: [...x.recuperation, { id: uid(), texte: '', nombre: '' }] }))}>
+          ＋ Ajouter une ligne
+        </button>
+      </Card>
+
+      <Card title="Pouvoirs de grade">
+        {p.pouvoirsGrade.length === 0 && <Empty>Aucun pouvoir de grade.</Empty>}
+        {p.pouvoirsGrade.map((g) => (
+          <div key={g.id} className="row">
+            <textarea className="grow" rows={2} value={g.texte} onChange={(e) => setGrade(g.id, e.target.value)} />
+            <button className="icon-btn" title="Retirer" onClick={() => maj((x) => ({ ...x, pouvoirsGrade: x.pouvoirsGrade.filter((y) => y.id !== g.id) }))}>
+              ✕
+            </button>
+          </div>
+        ))}
+        <div className="row">
+          {sup?.grades?.map((g) => (
+            <button key={g.titre} className="chip-btn" onClick={() => ajouterGrade(`${g.titre} : ${g.effet}`)} title={g.effet}>
+              ＋ {g.titre}
+            </button>
+          ))}
+          <button className="link small" onClick={() => ajouterGrade()}>
+            ＋ Ligne libre
+          </button>
+        </div>
+      </Card>
+
+      <Card title="Arme et objet magiques">
+        <div className="stack">
+          <div className="grid2">
+            <Field label="Arme magique" value={p.armeMagique.nom} onChange={(v) => maj((x) => ({ ...x, armeMagique: { ...x.armeMagique, nom: v } }))} />
+            <Field label="Caractéristique" value={p.armeMagique.carac} onChange={(v) => maj((x) => ({ ...x, armeMagique: { ...x.armeMagique, carac: v } }))} />
+          </div>
+          <Field label="Notes sur l'arme" value={p.armeMagique.notes} onChange={(v) => maj((x) => ({ ...x, armeMagique: { ...x.armeMagique, notes: v } }))} />
+          <Field label="Objet magique" value={p.objetMagique.nom} onChange={(v) => maj((x) => ({ ...x, objetMagique: { ...x.objetMagique, nom: v } }))} />
+          <div className="grid2">
+            <Field label="1er pouvoir" value={p.objetMagique.pouvoir1} onChange={(v) => maj((x) => ({ ...x, objetMagique: { ...x.objetMagique, pouvoir1: v } }))} />
+            <Field label="2e pouvoir" value={p.objetMagique.pouvoir2} onChange={(v) => maj((x) => ({ ...x, objetMagique: { ...x.objetMagique, pouvoir2: v } }))} />
+          </div>
+        </div>
+      </Card>
+
+      <Card title="Notes">
+        <Area label={`Notes sur le supérieur, les missions…`} value={p.notes.superieur} onChange={(v) => maj((x) => ({ ...x, notes: { ...x.notes, superieur: v } }))} />
+      </Card>
+    </div>
+  )
+}

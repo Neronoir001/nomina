@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { QrImage, QrScanModal } from '../components'
 import { appUrl, joinUrl, newTable, parseJoin } from '../lib/codes'
-import { joinTable, leaveTable, mjPeerIds, roleLabel, sendPackTest, sendSheet } from '../lib/p2p'
+import { joinTable, joueurPeerIds, leaveTable, mjPeerIds, roleLabel, sendReferentiel, sendSheet } from '../lib/p2p'
+import { nomAffiche } from '../lib/personnage'
+import { persoActif } from '../lib/store'
+import PersoResume from './PersoResume'
 import { heure, setState, useStore } from '../lib/store'
 import type { RelayKind, TableInfo } from '../lib/types'
 import { RELAYS } from '../lib/types'
@@ -94,25 +97,26 @@ function InviteCard({ table }: { table: TableInfo }) {
 
 function MjTools() {
   const s = useStore()
-  const fiches = Object.values(s.sheets).sort((a, b) => b.receivedAt - a.receivedAt)
+  const fiches = Object.values(s.fichesRecues).sort((a, b) => b.receivedAt - a.receivedAt)
+  const nbJoueurs = joueurPeerIds().length
   return (
     <>
       <section className="card stack">
-        <h3>Test de transfert</h3>
-        <p className="muted small">
-          Envoie 1 Mo de données à chaque joueur connecté, l'ordre de grandeur du futur pack de règles, et mesure le temps.
-        </p>
-        <button className="btn" onClick={() => void sendPackTest()} disabled={!!s.transfer}>
-          Envoyer un pack test (1 Mo)
-        </button>
-        <Progress />
-        {s.packResults.length > 0 && (
-          <ul className="list small">
-            {s.packResults.map((r, i) => (
-              <li key={i}>✅ {r}</li>
-            ))}
-          </ul>
+        <h3>Référentiel</h3>
+        {s.pack ? (
+          <>
+            <p className="muted small">
+              « {s.pack.titre} » v{s.pack.version} est envoyé automatiquement à chaque joueur qui rejoint la table. Utilise le bouton après une
+              mise à jour du référentiel.
+            </p>
+            <button className="btn" onClick={() => void sendReferentiel()} disabled={!!s.transfer || nbJoueurs === 0}>
+              Renvoyer le référentiel aux joueurs ({nbJoueurs})
+            </button>
+          </>
+        ) : (
+          <p className="muted small">Aucun référentiel installé sur ton appareil (Réglages).</p>
         )}
+        <Progress />
       </section>
 
       <section className="card">
@@ -123,28 +127,9 @@ function MjTools() {
           fiches.map((r) => (
             <details key={r.deviceId} className="fiche-recue">
               <summary>
-                <b>{r.sheet.nom || r.sheet.nomCouverture || '(sans nom)'}</b> — {r.name} · reçue à {heure(r.receivedAt)}
+                <b>{nomAffiche(r.perso)}</b> — {r.name} · reçue à {heure(r.receivedAt)}
               </summary>
-              <dl className="dl">
-                <dt>Camp</dt>
-                <dd>{r.sheet.camp === 'INS' ? 'Démon (INS)' : 'Ange (MV)'}</dd>
-                <dt>Supérieur</dt>
-                <dd>{r.sheet.superieur || '—'}</dd>
-                <dt>Caractéristiques</dt>
-                <dd>
-                  FO {r.sheet.fo} · AG {r.sheet.ag} · VO {r.sheet.vo} · PR {r.sheet.pr} · PE {r.sheet.pe} · AP {r.sheet.ap}
-                </dd>
-                <dt>PP / Blessures</dt>
-                <dd>
-                  {r.sheet.pp}/{r.sheet.ppMax} · {r.sheet.blessures}
-                </dd>
-                {r.sheet.notes && (
-                  <>
-                    <dt>Notes</dt>
-                    <dd className="pre">{r.sheet.notes}</dd>
-                  </>
-                )}
-              </dl>
+              <PersoResume p={r.perso} />
             </details>
           ))
         )}
@@ -156,14 +141,15 @@ function MjTools() {
 function PlayerTools() {
   const s = useStore()
   const mj = mjPeerIds().length > 0
+  const perso = persoActif(s)
   return (
     <section className="card stack">
       <h3>Ma fiche</h3>
       <p className="muted small">
-        Ta fiche est envoyée automatiquement au MJ quand vous êtes connectés.
+        {perso ? <>Le personnage affiché (« {nomAffiche(perso)} ») est envoyé automatiquement au MJ quand vous êtes connectés.</> : "Tu n'as pas encore de personnage."}
         {s.sheetAckAt && ` Dernière réception confirmée à ${heure(s.sheetAckAt)}.`}
       </p>
-      <button className="btn" disabled={!mj} onClick={() => void sendSheet()}>
+      <button className="btn" disabled={!mj || !perso} onClick={() => void sendSheet()}>
         Renvoyer ma fiche maintenant
       </button>
       <Progress />

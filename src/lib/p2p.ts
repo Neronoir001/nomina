@@ -4,11 +4,15 @@
 import type { JoinRoom, JsonValue, MessageAction, Room } from '@trystero-p2p/nostr'
 import { getState, log, setState } from './store'
 import { uid } from './storage'
-import type { ChatMessage, Peer, Profile, RelayKind, Role, Sheet, TableInfo } from './types'
+import type { Pack } from './pack'
+import { isPack } from './pack'
+import type { Personnage } from './personnage'
+import { normaliser } from './personnage'
+import { persoActif } from './store'
+import type { ChatMessage, Peer, Profile, RelayKind, Role, TableInfo } from './types'
 import { RELAYS } from './types'
 
 const APP_ID = 'nomina-insmv'
-const PACK_SIZE = 1024 * 1024 // 1 Mo : ordre de grandeur du futur pack de données
 
 type RelayModule = { joinRoom: JoinRoom; getRelaySockets?: () => unknown }
 type Hello = { deviceId: string; name: string; role: Role; version: string }
@@ -20,8 +24,8 @@ type Actions = {
   msgAck: MessageAction<JsonValue>
   sheet: MessageAction<JsonValue>
   sheetAck: MessageAction<JsonValue>
-  pack: MessageAction<ArrayBuffer>
-  packAck: MessageAction<JsonValue>
+  ref: MessageAction<JsonValue>
+  refAck: MessageAction<JsonValue>
 }
 
 let room: Room | null = null
@@ -29,7 +33,6 @@ let relayMod: RelayModule | null = null
 let A: Actions | null = null
 let pollTimer: number | undefined
 let joinToken = 0
-const packStarts = new Map<string, number>()
 
 async function loadRelay(kind: RelayKind): Promise<RelayModule> {
   switch (kind) {
@@ -152,8 +155,8 @@ function makeActions(r: Room): Actions {
     msgAck: r.makeAction<JsonValue>('msg-ack'),
     sheet: r.makeAction<JsonValue>('sheet'),
     sheetAck: r.makeAction<JsonValue>('sheet-ack'),
-    pack: r.makeAction<ArrayBuffer>('pack'),
-    packAck: r.makeAction<JsonValue>('pack-ack'),
+    ref: r.makeAction<JsonValue>('referentiel'),
+    refAck: r.makeAction<JsonValue>('ref-ack'),
   }
 
   a.hello.onMessage = (d, { peerId }) => onHello(d as unknown as Hello, peerId)
@@ -177,8 +180,9 @@ function makeActions(r: Room): Actions {
 
   a.sheet.onMessage = (d, { peerId }) => {
     if (me().role !== 'mj') return
-    const { sheet, name, deviceId } = d as unknown as { sheet: Sheet; name: string; deviceId: string }
-    setState((s) => ({ sheets: { ...s.sheets, [deviceId]: { deviceId, name, sheet, receivedAt: Date.now() } } }))
+    const { perso, name, deviceId } = d as unknown as { perso: Personnage; name: string; deviceId: string }
+    const p = normaliser(perso)
+    setState((s) => ({ fichesRecues: { ...s.fichesRecues, [deviceId]: { deviceId, name, perso: p, receivedAt: Date.now() } } }))
     log(`Fiche de ${name} reçue et sauvegardée.`, 'ok')
     void a.sheetAck.send({ at: Date.now() }, { target: peerId })
   }
@@ -188,22 +192,26 @@ function makeActions(r: Room): Actions {
     log(`Ta fiche a bien été reçue par ${peerName(peerId)}.`, 'ok')
   }
 
-  a.pack.onReceiveProgress = (p) => setState({ transfer: { label: 'Réception du pack test', percent: pct(p) } })
-  a.pack.onMessage = (data, { peerId }) => {
+  a.ref.onReceiveProgress = (p) => setState({ transfer: { label: 'Réception du référentiel', percent: pct(p) } })
+  a.ref.onMessage = (d, { peerId }) => {
     setState({ transfer: null })
-    log(`Pack test reçu de ${peerName(peerId)} (${mo(data.byteLength)}).`, 'ok')
-    void a.packAck.send({ bytes: data.byteLength }, { target: peerId })
+    if (!isPack(d)) {
+      log('Référentiel reçu illisible.', 'erreur')
+      return
+    }
+    const pack = d as unknown as Pack
+    const cur = getState().pack
+    if (cur && cur.version === pack.version && cur.date === pack.date) {
+      log(`Référentiel « ${pack.titre} » déjà à jour.`)
+    } else {
+      setState({ packPropose: { pack, de: peerName(peerId) } })
+      log(`Le MJ propose le référentiel « ${pack.titre} » (version ${pack.version}).`, 'ok')
+    }
+    void a.refAck.send({ version: pack.version }, { target: peerId })
   }
 
-  a.packAck.onMessage = (d, { peerId }) => {
-    const start = packStarts.get(peerId)
-    packStarts.delete(peerId)
-    if (start === undefined) return
-    const secs = (performance.now() - start) / 1000
-    const { bytes } = d as { bytes: number }
-    const res = `${peerName(peerId)} : ${mo(bytes)} reçus en ${secs.toFixed(1).replace('.', ',')} s`
-    setState((s) => ({ packResults: [...s.packResults, res], transfer: packStarts.size ? s.transfer : null }))
-    log(res, 'ok')
+  a.refAck.onMessage = (_d, { peerId }) => {
+    log(`Référentiel bien reçu par ${peerName(peerId)}.`, 'ok')
   }
 
   return a
@@ -228,6 +236,8 @@ function onHello(h: Hello, peerId: string): void {
   }
   // Un joueur envoie automatiquement sa fiche au MJ
   if (me().role === 'joueur' && h.role === 'mj') void sendSheet([peerId])
+  // Le MJ envoie automatiquement son référentiel aux joueurs
+  if (me().role === 'mj' && h.role === 'joueur' && getState().pack) void sendReferentiel([peerId])
 }
 
 // ───────────────────────── Messagerie ─────────────────────────
@@ -262,32 +272,33 @@ export function mjPeerIds(): string[] {
 }
 
 export async function sendSheet(targets = mjPeerIds()): Promise<boolean> {
-  if (!A || targets.length === 0) return false
+  const perso = persoActif()
+  if (!A || targets.length === 0 || !perso) return false
   const p = me()
-  await A.sheet.send({ sheet: getState().sheet, name: p.name, deviceId: p.deviceId } as unknown as JsonValue, { target: targets })
+  await A.sheet.send({ perso, name: p.name, deviceId: p.deviceId } as unknown as JsonValue, { target: targets })
   log('Fiche envoyée au MJ…')
   return true
 }
 
-// ───────────────────────── Test de transfert (pack de données) ─────────────────────────
+// ───────────────────────── Diffusion du référentiel ─────────────────────────
 
-export async function sendPackTest(): Promise<void> {
-  if (!A) return
-  const targets = Object.values(getState().peers).filter((p) => p.role === 'joueur').map((p) => p.peerId)
-  if (targets.length === 0) {
-    log('Aucun joueur connecté pour le test.', 'erreur')
-    return
+export function joueurPeerIds(): string[] {
+  return Object.values(getState().peers).filter((p) => p.role === 'joueur').map((p) => p.peerId)
+}
+
+export async function sendReferentiel(targets = joueurPeerIds()): Promise<void> {
+  const pack = getState().pack
+  if (!A || !pack || targets.length === 0) return
+  setState({ transfer: { label: 'Envoi du référentiel', percent: 0 } })
+  log(`Envoi du référentiel à ${targets.length} joueur(s)…`)
+  try {
+    await A.ref.send(pack as unknown as JsonValue, {
+      target: targets,
+      onProgress: (p) => setState({ transfer: { label: 'Envoi du référentiel', percent: pct(p) } }),
+    })
+  } finally {
+    setState({ transfer: null })
   }
-  const buf = new Uint8Array(PACK_SIZE)
-  for (let i = 0; i < buf.length; i += 65536) crypto.getRandomValues(buf.subarray(i, i + 65536))
-  const now = performance.now()
-  targets.forEach((t) => packStarts.set(t, now))
-  setState({ transfer: { label: 'Envoi du pack test', percent: 0 }, packResults: [] })
-  log(`Envoi d'un pack test de ${mo(PACK_SIZE)} à ${targets.length} joueur(s)…`)
-  await A.pack.send(buf.buffer, {
-    target: targets,
-    onProgress: (p) => setState({ transfer: { label: 'Envoi du pack test', percent: pct(p) } }),
-  })
 }
 
 // ───────────────────────── Diagnostic ─────────────────────────
