@@ -1,11 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { GardeErreur } from './Erreurs'
 import './styles.css'
 import './styles-fiche.css'
 import { initInstallCapture } from './lib/install'
 import { resumeIfNeeded } from './lib/p2p'
-import { flush, initStore } from './lib/store'
+import { flush, initStore, log } from './lib/store'
 
 initInstallCapture()
 
@@ -20,9 +21,15 @@ window.addEventListener('pagehide', flush)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <GardeErreur>
+      <App />
+    </GardeErreur>
   </StrictMode>,
 )
+
+// Toute erreur imprévue est notée dans le journal (visible dans Diagnostic).
+window.addEventListener('error', (e) => log(`Erreur : ${e.message}`, 'erreur'))
+window.addEventListener('unhandledrejection', (e) => log(`Erreur : ${String(e.reason)}`, 'erreur'))
 
 void initStore().then(() => {
   // Si l'appareil était à une table lors de la dernière utilisation, on s'y reconnecte.

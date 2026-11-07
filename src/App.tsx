@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { InstallBanner, StatusPill, UpdatePrompt } from './components'
+import { ConseilsDemarrage, EcranErreur } from './Erreurs'
 import { parseJoin } from './lib/codes'
 import { roleLabel } from './lib/p2p'
 import { log, setState, useStore } from './lib/store'
@@ -35,6 +36,13 @@ export default function App() {
       </div>
     )
   }
+  if (s.erreurDemarrage)
+    return (
+      <>
+        <EcranErreur titre="Nomina n'a pas pu charger tes données" detail={s.erreurDemarrage} conseil={<ConseilsDemarrage />} />
+        <UpdatePrompt />
+      </>
+    )
   if (!s.profile)
     return (
       <>

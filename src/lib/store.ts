@@ -28,6 +28,8 @@ export type State = {
   transfer: { label: string; percent: number } | null
   /** Référentiel proposé par le MJ, en attente d'acceptation */
   packPropose: { pack: Pack; de: string } | null
+  /** Message d'erreur si le démarrage a échoué (données non chargées) */
+  erreurDemarrage: string | null
   logs: LogLine[]
 }
 
@@ -57,6 +59,7 @@ let state: State = {
   preferredRelay: 'nostr',
   transfer: null,
   packPropose: null,
+  erreurDemarrage: null,
   logs: [],
 }
 
@@ -65,7 +68,11 @@ const listeners = new Set<() => void>()
 const timers = new Map<string, number>()
 let persistError = false
 
+/** Vrai si le chargement a échoué : on n'écrit plus rien pour ne pas écraser les vraies données. */
+let enregistrementSuspendu = false
+
 function persist(k: PersistedKey): void {
+  if (enregistrementSuspendu) return
   window.clearTimeout(timers.get(k))
   timers.set(
     k,
@@ -80,6 +87,7 @@ function persist(k: PersistedKey): void {
 
 /** Écrit immédiatement les données en attente (avant de quitter la page). */
 export function flush(): void {
+  if (enregistrementSuspendu) return
   for (const [k, t] of timers) {
     window.clearTimeout(t)
     void idbSet(k, state[k as PersistedKey], db)
@@ -158,13 +166,36 @@ function lsGet<T>(k: string): T | undefined {
   }
 }
 
+function avecDelai<T>(p: Promise<T>, ms: number, quoi: string): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, rej) => window.setTimeout(() => rej(new Error(`${quoi} : pas de réponse après ${ms / 1000} s`)), ms)),
+  ])
+}
+
+/**
+ * Chargement au démarrage. Quoi qu'il arrive, l'appli finit par s'afficher :
+ * en cas d'échec, un message d'erreur est montré et l'enregistrement est suspendu
+ * pour ne jamais écraser les données existantes par des données vides.
+ */
 export async function initStore(): Promise<void> {
-  let values: unknown[] = []
+  const debut = performance.now()
   try {
-    values = await getMany([...PERSISTED], db)
+    await chargerDonnees()
+    log(`Données chargées en ${Math.round(performance.now() - debut)} ms.`)
   } catch (e) {
-    log(`Base locale indisponible : ${String(e)}`, 'erreur')
+    const msg = e instanceof Error ? `${e.name} : ${e.message}` : String(e)
+    enregistrementSuspendu = true
+    state = { ...state, erreurDemarrage: msg }
+    log(`Erreur au démarrage : ${msg}`, 'erreur')
+  } finally {
+    state = { ...state, hydrated: true }
+    listeners.forEach((l) => l())
   }
+}
+
+async function chargerDonnees(): Promise<void> {
+  const values = await avecDelai(getMany([...PERSISTED], db), 8000, 'Ouverture de la base locale')
   const loaded: Partial<State> = {}
   PERSISTED.forEach((k, i) => {
     if (values[i] !== undefined) (loaded as Record<string, unknown>)[k] = values[i]
@@ -202,13 +233,17 @@ export async function initStore(): Promise<void> {
   }
 
   if (loaded.personnages) {
-    loaded.personnages = Object.fromEntries(Object.entries(loaded.personnages).map(([k, v]) => [k, normaliser(v)]))
+    loaded.personnages = Object.fromEntries(
+      Object.entries(loaded.personnages)
+        .filter(([, v]) => v && typeof v === 'object')
+        .map(([k, v]) => [k, normaliser(v)]),
+    )
   }
+  if (loaded.actifId && !loaded.personnages?.[loaded.actifId]) loaded.actifId = Object.keys(loaded.personnages ?? {})[0] ?? null
 
-  state = { ...state, ...loaded, hydrated: true }
+  state = { ...state, ...loaded }
   // Réécrit ce qui vient de la migration
   for (const k of Object.keys(loaded)) persist(k as PersistedKey)
-  listeners.forEach((l) => l())
 }
 
 /** Efface toutes les données de Nomina sur cet appareil. */
