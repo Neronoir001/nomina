@@ -28,6 +28,10 @@ export type State = {
   transfer: { label: string; percent: number } | null
   /** Référentiel proposé par le MJ, en attente d'acceptation */
   packPropose: { pack: Pack; de: string } | null
+  /** Date de la dernière sauvegarde complète exportée */
+  derniereSauvegarde: number | null
+  /** Dernière version dont l'utilisateur a lu les nouveautés */
+  nouveautesVues: string | null
   /** Message d'erreur si le démarrage a échoué (données non chargées) */
   erreurDemarrage: string | null
   logs: LogLine[]
@@ -35,7 +39,7 @@ export type State = {
 
 const PERSISTED = [
   'profile', 'personnages', 'actifId', 'pack', 'signalements', 'table', 'contacts', 'messages', 'unread',
-  'fichesRecues', 'sheetAckAt', 'preferredRelay',
+  'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues',
 ] as const
 type PersistedKey = (typeof PERSISTED)[number]
 
@@ -59,6 +63,8 @@ let state: State = {
   preferredRelay: 'nostr',
   transfer: null,
   packPropose: null,
+  derniereSauvegarde: null,
+  nouveautesVues: null,
   erreurDemarrage: null,
   logs: [],
 }

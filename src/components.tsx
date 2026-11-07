@@ -4,7 +4,7 @@ import QrScanner from 'qr-scanner'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { parseJoin } from './lib/codes'
 import { canPromptInstall, isAndroid, isIOS, isStandalone, onInstallChange, promptInstall } from './lib/install'
-import { surveillerMisesAJour } from './lib/maj'
+import { signalerMaj, surveillerMisesAJour } from './lib/maj'
 import type { Status } from './lib/store'
 import type { TableInfo } from './lib/types'
 
@@ -130,26 +130,28 @@ export function UpdatePrompt() {
       if (r) surveillerMisesAJour(r)
     },
   })
+  const [masque, setMasque] = useState(false)
   useEffect(() => {
     if (!offlineReady) return
     const t = window.setTimeout(() => setOfflineReady(false), 5000)
     return () => window.clearTimeout(t)
   }, [offlineReady, setOfflineReady])
-  if (needRefresh) {
+  const appliquer = () => {
+    void updateServiceWorker(true)
+    // Filet de sécurité : si la page n'a pas été rechargée automatiquement, on la recharge.
+    window.setTimeout(() => location.reload(), 2500)
+  }
+  // L'accueil affiche aussi la mise à jour dans « À faire », même après « Plus tard ».
+  useEffect(() => signalerMaj(needRefresh, appliquer))
+  void setNeedRefresh
+  if (needRefresh && !masque) {
     return (
       <div className="toast">
         <span>Nouvelle version de Nomina disponible.</span>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            void updateServiceWorker(true)
-            // Filet de sécurité : si la page n'a pas été rechargée automatiquement, on la recharge.
-            window.setTimeout(() => location.reload(), 2500)
-          }}
-        >
+        <button className="btn btn-primary" onClick={appliquer}>
           Mettre à jour
         </button>
-        <button className="link" onClick={() => setNeedRefresh(false)}>
+        <button className="link" onClick={() => setMasque(true)}>
           Plus tard
         </button>
       </div>

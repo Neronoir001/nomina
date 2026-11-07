@@ -21,6 +21,32 @@ export function surveillerMisesAJour(r: ServiceWorkerRegistration): void {
   window.addEventListener('online', verifierEnSilence)
 }
 
+// ───────── État « mise à jour disponible », partagé entre le bandeau et l'accueil ─────────
+let dispo = false
+let appliquerFn: (() => void) | null = null
+const ecouteurs = new Set<() => void>()
+
+export function signalerMaj(disponible: boolean, appliquer: () => void): void {
+  appliquerFn = appliquer
+  if (dispo !== disponible) {
+    dispo = disponible
+    ecouteurs.forEach((l) => l())
+  }
+}
+
+export function majDisponible(): boolean {
+  return dispo
+}
+
+export function ecouterMaj(l: () => void): () => void {
+  ecouteurs.add(l)
+  return () => ecouteurs.delete(l)
+}
+
+export function appliquerMaj(): void {
+  appliquerFn?.()
+}
+
 /** Vérification demandée par l'utilisateur. */
 export async function verifierMaj(): Promise<'maj' | 'a-jour' | 'hors-ligne' | 'indisponible'> {
   if (!navigator.onLine) return 'hors-ligne'

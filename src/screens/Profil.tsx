@@ -13,7 +13,7 @@ export default function Profil({ first, onClose }: { first?: boolean; onClose?: 
     e.preventDefault()
     const n = name.trim()
     if (!n) return
-    setState({ profile: { deviceId: cur?.deviceId ?? uid(), name: n, role } })
+    setState({ profile: { deviceId: cur?.deviceId ?? uid(), name: n, role }, ...(first ? { nouveautesVues: __APP_VERSION__ } : {}) })
     announceProfile()
     onClose?.()
   }
@@ -25,8 +25,8 @@ export default function Profil({ first, onClose }: { first?: boolean; onClose?: 
           <img className="hero-icon" src={`${import.meta.env.BASE_URL}icon-192.png`} alt="" width={96} height={96} />
           <h1>Bienvenue dans Nomina</h1>
           <p className="muted">
-            Version de test : elle sert à vérifier que vos appareils arrivent à se connecter entre eux. La vraie fiche
-            de personnage viendra ensuite.
+            Tes personnages d'In Nomine Satanis et de Magna Veritas, ta table de jeu et tes messages secrets, au même
+            endroit. Pour commencer, présente-toi.
           </p>
         </>
       )}

@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { InstallBanner, StatusPill, UpdatePrompt } from './components'
+import { StatusPill, UpdatePrompt } from './components'
 import { ConseilsDemarrage, EcranErreur } from './Erreurs'
 import { parseJoin } from './lib/codes'
 import { roleLabel } from './lib/p2p'
 import { log, setState, useStore } from './lib/store'
 import type { TableInfo } from './lib/types'
+import Accueil, { type Onglet } from './screens/Accueil'
 import Fiche from './screens/fiche/Fiche'
 import Messages from './screens/Messages'
 import Profil from './screens/Profil'
@@ -13,7 +14,7 @@ import Reglages from './screens/Reglages'
 import Table from './screens/Table'
 import { Modal } from './ui'
 
-type Tab = 'fiche' | 'referentiel' | 'table' | 'messages' | 'reglages'
+type Tab = Onglet
 
 function readPendingJoin(): TableInfo | null {
   const info = parseJoin(location.hash)
@@ -24,7 +25,7 @@ function readPendingJoin(): TableInfo | null {
 export default function App() {
   const s = useStore()
   const [pendingJoin, setPendingJoin] = useState<TableInfo | null>(readPendingJoin)
-  const [tab, setTab] = useState<Tab>(pendingJoin ? 'table' : 'fiche')
+  const [tab, setTab] = useState<Tab>(pendingJoin ? 'table' : 'accueil')
   const [editProfile, setEditProfile] = useState(false)
 
   // La vérification des mises à jour tourne dès le premier écran.
@@ -57,19 +58,21 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand">
+        <button className="brand" onClick={() => setTab('accueil')} title="Accueil">
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width={28} height={28} />
           <span>Nomina</span>
-        </div>
+        </button>
         <StatusPill status={s.status} peers={peerCount} />
         <button className="chip" onClick={() => setEditProfile(true)} title="Modifier mon profil">
           {s.profile.name} · {roleLabel(s.profile.role)}
         </button>
+        <button className={`icon-btn gear${tab === 'reglages' ? ' on' : ''}`} onClick={() => setTab('reglages')} title="Réglages" aria-label="Réglages">
+          ⚙️
+        </button>
       </header>
 
-      <InstallBanner />
-
       <main className="content">
+        {tab === 'accueil' && <Accueil aller={setTab} />}
         {tab === 'fiche' && <Fiche />}
         {tab === 'referentiel' && <Referentiel />}
         {tab === 'table' && <Table pendingJoin={pendingJoin} clearPending={() => setPendingJoin(null)} />}
@@ -78,11 +81,11 @@ export default function App() {
       </main>
 
       <nav className="tabbar">
+        <TabButton id="accueil" cur={tab} set={setTab} label="Accueil" icon="🏠" />
         <TabButton id="fiche" cur={tab} set={setTab} label="Fiche" icon="📜" />
         <TabButton id="referentiel" cur={tab} set={setTab} label="Référentiel" icon="📚" />
         <TabButton id="table" cur={tab} set={setTab} label="Table" icon="🕯️" />
         <TabButton id="messages" cur={tab} set={setTab} label="Messages" icon="✉️" badge={unread} />
-        <TabButton id="reglages" cur={tab} set={setTab} label="Réglages" icon="⚙️" />
       </nav>
 
       {editProfile && <Profil onClose={() => setEditProfile(false)} />}

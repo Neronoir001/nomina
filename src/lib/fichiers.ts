@@ -59,6 +59,7 @@ export async function exporterTout(): Promise<void> {
     personnages: Object.values(getState().personnages),
   }
   await partagerFichier(`Nomina-sauvegarde-${aujourdhui()}.json`, s)
+  setState({ derniereSauvegarde: Date.now() })
 }
 
 export async function exporterPerso(p: Personnage): Promise<void> {
