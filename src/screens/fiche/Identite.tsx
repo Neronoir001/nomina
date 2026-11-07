@@ -20,6 +20,32 @@ const DESCRIPTION: { k: keyof Personnage['description']; label: string }[] = [
   { k: 'armure', label: 'Armure' },
 ]
 
+const RANG_NUM: Record<string, number> = { chevalier: 1, capitaine: 2, baron: 3 }
+
+/** Grade : menu des grades accordés par le supérieur choisi, sinon saisie libre. */
+function ChoixGrade({ perso: p, onChange }: { perso: Personnage; onChange: (v: string) => void }) {
+  const pack = useStore().pack
+  const sup = pack?.superieurs.find((s) => s.id === p.identite.superieurId)
+  const grades = sup?.grades ?? []
+  if (grades.length === 0) return <Field label="Grade" value={p.identite.grade} onChange={onChange} />
+  const connu = !p.identite.grade || grades.some((g) => g.titre === p.identite.grade)
+  return (
+    <label>
+      Grade
+      <select value={p.identite.grade} onChange={(e) => onChange(e.target.value)}>
+        <option value="">Aucun grade</option>
+        {grades.map((g) => (
+          <option key={g.titre} value={g.titre}>
+            {g.titre}
+            {RANG_NUM[g.rang] ? ` (grade ${RANG_NUM[g.rang]})` : ''}
+          </option>
+        ))}
+        {!connu && <option value={p.identite.grade}>{p.identite.grade} (saisie précédente)</option>}
+      </select>
+    </label>
+  )
+}
+
 export default function Identite({ perso: p, maj }: { perso: Personnage; maj: MajPerso }) {
   const pack = useStore().pack
   const superieurs = pack?.superieurs.filter((x) => x.camp === p.camp) ?? []
@@ -42,7 +68,7 @@ export default function Identite({ perso: p, maj }: { perso: Personnage; maj: Ma
           <Field label="Nom de couverture" value={p.identite.nomCouverture} onChange={(v) => setId('nomCouverture', v)} />
           <div className="grid2">
             <Field label="Nom" value={p.identite.nom} onChange={(v) => setId('nom', v)} />
-            <Field label="Grade" value={p.identite.grade} onChange={(v) => setId('grade', v)} />
+            <ChoixGrade perso={p} onChange={(v) => setId('grade', v)} />
           </div>
           {superieurs.length > 0 ? (
             <ChoixSuperieur perso={p} maj={maj} />

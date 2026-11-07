@@ -144,7 +144,7 @@ function CartePerso({ p, actif, ouvrir }: { p: Personnage; actif: boolean; ouvri
   const pack = useStore().pack
   const sup = pack?.superieurs.find((x) => x.id === p.identite.superieurId)
   const supNom = sup?.nom ?? p.identite.superieurLibre
-  const details = [supNom, p.identite.grade && `grade ${p.identite.grade}`].filter(Boolean).join(', ')
+  const details = [supNom, p.identite.grade].filter(Boolean).join(' · ')
   return (
     <div className={`carte-perso camp-${p.camp.toLowerCase()}${actif ? ' actif' : ''}`}>
       <button className="carte-perso-tete" onClick={ouvrir}>

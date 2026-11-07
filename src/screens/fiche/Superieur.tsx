@@ -16,7 +16,9 @@ export function ChoixSuperieur({ perso: p, maj }: { perso: Personnage; maj: MajP
     const s = superieurs.find((x) => x.id === id)
     maj((x) => {
       const ancien = superieurs.find((y) => y.id === x.identite.superieurId)
-      const n = { ...x, identite: { ...x.identite, superieurId: id } }
+      // Un grade du supérieur précédent n'a plus de sens avec le nouveau
+      const gradeAncien = !!ancien?.grades?.some((g) => g.titre === x.identite.grade)
+      const n = { ...x, identite: { ...x.identite, superieurId: id, grade: gradeAncien ? '' : x.identite.grade } }
       const invocationAuto = !x.invocation.possibilite || (ancien && x.invocation.possibilite === String(ancien.intervention))
       if (s && invocationAuto && s.intervention != null) n.invocation = { ...x.invocation, possibilite: String(s.intervention) }
       const recupAncien = (ancien?.recuperation ?? []).map((r) => `${r.condition}|${r.gain}`).join('§')

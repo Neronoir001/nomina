@@ -44,6 +44,13 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.4.1',
+    date: '8 novembre 2026',
+    points: [
+      'Fiche, onglet Identité : une fois le supérieur choisi, le grade se choisit dans la liste des grades qu’il accorde (ou « Aucun grade »).',
+    ],
+  },
+  {
     version: '0.4.0',
     date: '8 novembre 2026',
     points: [
