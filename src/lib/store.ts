@@ -157,6 +157,10 @@ export function listePersos(s: State = state): Personnage[] {
 
 // ───────── Chargement initial et migration depuis le prototype ─────────
 
+function objet<T>(x: T | undefined | null): NonNullable<T> | Record<string, never> {
+  return x && typeof x === 'object' && !Array.isArray(x) ? (x as NonNullable<T>) : {}
+}
+
 function lsGet<T>(k: string): T | undefined {
   try {
     const raw = localStorage.getItem('nomina:' + k)
@@ -206,23 +210,37 @@ async function chargerDonnees(): Promise<void> {
     const oldProfile = lsGet<Profile>('profile')
     if (oldProfile) {
       loaded.profile = oldProfile
-      const oldSheet = lsGet<Parameters<typeof depuisFicheProto>[0]>('sheet')
-      if (oldSheet) {
-        const p = depuisFicheProto(oldSheet)
-        loaded.personnages = { [p.id]: p }
-        loaded.actifId = p.id
+      // Chaque élément est repris séparément : un élément abîmé est ignoré au lieu de tout bloquer.
+      const reprendre = (quoi: string, f: () => void) => {
+        try {
+          f()
+        } catch (e) {
+          log(`Reprise du prototype : « ${quoi} » ignoré (${String(e)}).`, 'erreur')
+        }
       }
-      loaded.contacts = lsGet('contacts') ?? {}
-      loaded.messages = lsGet('messages') ?? []
-      loaded.unread = lsGet('unread') ?? {}
-      loaded.table = lsGet('table') ?? null
-      loaded.preferredRelay = lsGet('preferredRelay') ?? 'nostr'
-      const oldSheets = lsGet<Record<string, { deviceId: string; name: string; sheet: Parameters<typeof depuisFicheProto>[0]; receivedAt: number }>>('sheets')
-      if (oldSheets) {
-        loaded.fichesRecues = Object.fromEntries(
-          Object.values(oldSheets).map((r) => [r.deviceId, { deviceId: r.deviceId, name: r.name, perso: depuisFicheProto(r.sheet), receivedAt: r.receivedAt }]),
-        )
-      }
+      reprendre('fiche', () => {
+        const oldSheet = lsGet<Parameters<typeof depuisFicheProto>[0]>('sheet')
+        if (oldSheet && typeof oldSheet === 'object') {
+          const p = depuisFicheProto(oldSheet)
+          loaded.personnages = { [p.id]: p }
+          loaded.actifId = p.id
+        }
+      })
+      reprendre('contacts', () => (loaded.contacts = objet(lsGet('contacts'))))
+      reprendre('messages', () => (loaded.messages = Array.isArray(lsGet('messages')) ? lsGet('messages') : []))
+      reprendre('non lus', () => (loaded.unread = objet(lsGet('unread'))))
+      reprendre('table', () => (loaded.table = lsGet<TableInfo>('table')?.id ? lsGet<TableInfo>('table')! : null))
+      reprendre('relais', () => (loaded.preferredRelay = lsGet<RelayKind>('preferredRelay') ?? 'nostr'))
+      reprendre('fiches reçues', () => {
+        type Ancienne = { deviceId?: string; name?: string; sheet?: Parameters<typeof depuisFicheProto>[0]; receivedAt?: number }
+        const oldSheets = objet(lsGet<Record<string, Ancienne>>('sheets'))
+        const fiches: Record<string, FicheRecue> = {}
+        for (const r of Object.values(oldSheets)) {
+          if (!r || !r.deviceId || !r.sheet || typeof r.sheet !== 'object') continue
+          fiches[r.deviceId] = { deviceId: r.deviceId, name: r.name ?? '?', perso: depuisFicheProto(r.sheet), receivedAt: r.receivedAt ?? Date.now() }
+        }
+        loaded.fichesRecues = fiches
+      })
       try {
         Object.keys(localStorage).filter((k) => k.startsWith('nomina:')).forEach((k) => localStorage.removeItem(k))
       } catch {

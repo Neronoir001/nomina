@@ -122,8 +122,9 @@ export function nomAffiche(p: Personnage): string {
 }
 
 /** Complète un personnage venu d'une version plus ancienne ou d'un fichier importé. */
-export function normaliser(x: Partial<Personnage>): Personnage {
-  const base = nouveauPersonnage(x.camp ?? 'INS')
+export function normaliser(entree: Partial<Personnage> | null | undefined): Personnage {
+  const x: Partial<Personnage> = entree && typeof entree === 'object' ? entree : {}
+  const base = nouveauPersonnage(x.camp === 'MV' ? 'MV' : 'INS')
   return {
     ...base,
     ...x,
@@ -136,8 +137,18 @@ export function normaliser(x: Partial<Personnage>): Personnage {
     armeMagique: { ...base.armeMagique, ...x.armeMagique },
     objetMagique: { ...base.objetMagique, ...x.objetMagique },
     notes: { ...base.notes, ...x.notes },
-    id: x.id ?? base.id,
+    talents: liste(x.talents),
+    pouvoirs: liste(x.pouvoirs),
+    limitations: liste(x.limitations),
+    pouvoirsGrade: liste(x.pouvoirsGrade),
+    recuperation: liste(x.recuperation),
+    serviteurs: liste(x.serviteurs),
+    id: typeof x.id === 'string' && x.id ? x.id : base.id,
   } as Personnage
+}
+
+function liste<T>(v: T[] | undefined): T[] {
+  return Array.isArray(v) ? v.filter((e) => e && typeof e === 'object') : []
 }
 
 /** Fiche simplifiée du prototype (étape 0) → personnage complet. */
@@ -145,8 +156,9 @@ export function depuisFicheProto(s: {
   nomCouverture?: string; nom?: string; camp?: Camp; superieur?: string; grade?: string
   fo?: number; ag?: number; vo?: number; pr?: number; pe?: number; ap?: number
   pp?: number; ppMax?: number; blessures?: number; notes?: string
-}): Personnage {
-  const p = nouveauPersonnage(s.camp ?? 'INS')
+} = {}): Personnage {
+  s = s && typeof s === 'object' ? s : {}
+  const p = nouveauPersonnage(s.camp === 'MV' ? 'MV' : 'INS')
   p.identite = { ...p.identite, nomCouverture: s.nomCouverture ?? '', nom: s.nom ?? '', grade: s.grade ?? '', superieurLibre: s.superieur ?? '' }
   p.caracs = { fo: s.fo ?? 2, ag: s.ag ?? 2, vo: s.vo ?? 2, pr: s.pr ?? 2, pe: s.pe ?? 2, ap: s.ap ?? 2 }
   p.pp = { actuel: s.pp ?? 0, max: s.ppMax ?? 0 }
