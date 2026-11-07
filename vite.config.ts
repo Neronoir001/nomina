@@ -54,6 +54,9 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Le service worker prend la main sur la page dès sa première installation,
+        // sinon le bouton « Mettre à jour » n'a aucun effet dans cette fenêtre.
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },

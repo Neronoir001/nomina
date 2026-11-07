@@ -139,7 +139,14 @@ export function UpdatePrompt() {
     return (
       <div className="toast">
         <span>Nouvelle version de Nomina disponible.</span>
-        <button className="btn btn-primary" onClick={() => void updateServiceWorker(true)}>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            void updateServiceWorker(true)
+            // Filet de sécurité : si la page n'a pas été rechargée automatiquement, on la recharge.
+            window.setTimeout(() => location.reload(), 2500)
+          }}
+        >
           Mettre à jour
         </button>
         <button className="link" onClick={() => setNeedRefresh(false)}>
