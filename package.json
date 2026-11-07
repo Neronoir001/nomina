@@ -1,8 +1,8 @@
-﻿{
+{
   "name": "nomina",
   "private": true,
   "version": "0.2.0",
-  "description": "Nomina â€” fiches de personnages INS/MV 3e Ã©dition (prototype de synchronisation)",
+  "description": "Nomina — fiches de personnages INS/MV 3e édition",
   "type": "module",
   "scripts": {
     "dev": "vite",
