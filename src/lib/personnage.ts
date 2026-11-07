@@ -25,6 +25,8 @@ export type PouvoirPerso = {
   def: string
   num: string
   notes: string
+  /** Pouvoir propre d'un autre supérieur, accordé par le MJ (exception aux règles) */
+  accordeParMJ?: boolean
 }
 
 export type LimitationPerso = { id: string; refId?: string; nom: string; notes: string }

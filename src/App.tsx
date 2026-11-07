@@ -90,6 +90,17 @@ export default function App() {
 
       {editProfile && <Profil onClose={() => setEditProfile(false)} />}
 
+      {s.annonce && (
+        <Modal title={s.annonce.titre} onClose={() => setState({ annonce: null })}>
+          <div className="stack">
+            <p>{s.annonce.texte}</p>
+            <button className="btn btn-primary" onClick={() => setState({ annonce: null })}>
+              OK
+            </button>
+          </div>
+        </Modal>
+      )}
+
       {s.packPropose && (
         <Modal title="Référentiel proposé" onClose={() => setState({ packPropose: null })}>
           <div className="stack">

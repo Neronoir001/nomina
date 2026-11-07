@@ -44,6 +44,14 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.4.2',
+    date: '8 novembre 2026',
+    points: [
+      'Pouvoirs propres : un joueur ne peut prendre que celui de son supérieur. Seul le MJ peut en accorder un autre (Table → fiche du joueur → « Accorder un pouvoir propre »).',
+      'En changeant de supérieur, le pouvoir propre de l’ancien est remplacé automatiquement par celui du nouveau (niveau et notes conservés).',
+    ],
+  },
+  {
     version: '0.4.1',
     date: '8 novembre 2026',
     points: [

@@ -155,3 +155,5 @@ button.bubble { font: inherit; color: var(--text); border: 0; text-align: left; 
 .bubble-actions { display: flex; gap: .8rem; padding: .2rem .3rem; }
 .link.danger { color: #ff9d97; }
 .choix-membres .choice { justify-content: flex-start; }
+.tag-mj { color: #1a1208; background: var(--gold); text-transform: none; letter-spacing: 0; }
+.accorder { margin-top: .6rem; }

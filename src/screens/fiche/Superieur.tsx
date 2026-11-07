@@ -1,11 +1,40 @@
-import type { SuperieurRef } from '../../lib/pack'
-import type { Personnage } from '../../lib/personnage'
+import type { PouvoirRef, SuperieurRef } from '../../lib/pack'
+import type { Personnage, PouvoirPerso } from '../../lib/personnage'
 import { uid } from '../../lib/storage'
 import { useStore } from '../../lib/store'
 import { Area, Card, Choix, Empty, Field } from '../../ui'
 import { FicheSuperieur } from '../referentiel/Details'
 import type { MajPerso } from './Fiche'
 import { LISTES } from './Suggestions'
+
+/**
+ * Au changement de supérieur, le pouvoir propre de l'ancien est remplacé par celui du nouveau
+ * (niveau et notes conservés). Il est retiré si le nouveau n'en a pas. Les pouvoirs accordés par le MJ ne bougent pas.
+ */
+function remplacerPouvoirPropre(pouvoirs: PouvoirPerso[], ancien: SuperieurRef | undefined, nouveau: SuperieurRef | undefined, refs: PouvoirRef[]): PouvoirPerso[] {
+  if (!ancien || ancien.id === nouveau?.id) return pouvoirs
+  const nouveauRef = refs.find((r) => r.id === nouveau?.pouvoirsPropres?.[0])
+  let dejaPlace = pouvoirs.some((pw) => pw.refId && pw.refId === nouveauRef?.id)
+  return pouvoirs.flatMap((pw) => {
+    const ref = pw.refId ? refs.find((r) => r.id === pw.refId) : undefined
+    if (!ref || ref.superieur !== ancien.id || pw.accordeParMJ) return [pw]
+    if (!nouveauRef || dejaPlace) return []
+    dejaPlace = true
+    return [
+      {
+        ...pw,
+        refId: nouveauRef.id,
+        nom: nouveauRef.nom,
+        type: nouveauRef.type ?? '',
+        cout: nouveauRef.cout ?? '',
+        portee: nouveauRef.portee ?? '',
+        att: nouveauRef.carac ?? '',
+        def: nouveauRef.defense ?? '',
+        num: nouveauRef.d666 ?? '',
+      },
+    ]
+  })
+}
 
 /** Choix du supérieur avec recherche ; remplit les cases liées si elles sont vides ou non modifiées. */
 export function ChoixSuperieur({ perso: p, maj }: { perso: Personnage; maj: MajPerso }) {
@@ -25,6 +54,7 @@ export function ChoixSuperieur({ perso: p, maj }: { perso: Personnage; maj: MajP
       const recupActuel = x.recuperation.map((r) => `${r.texte}|${r.nombre}`).join('§')
       const recupAuto = x.recuperation.length === 0 || (ancien && recupActuel === recupAncien)
       if (s && recupAuto) n.recuperation = (s.recuperation ?? []).map((r) => ({ id: uid(), texte: r.condition, nombre: r.gain }))
+      n.pouvoirs = remplacerPouvoirPropre(x.pouvoirs, ancien, s, pack?.pouvoirs ?? [])
       return n
     })
   }

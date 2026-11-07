@@ -22,10 +22,21 @@ const COLS: { k: keyof PouvoirPerso; label: string; list?: string }[] = [
 
 
 export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: MajPerso }) {
-  const pack = useStore().pack
+  const st = useStore()
+  const pack = st.pack
+  const estMj = st.profile?.role === 'mj'
   const [choix, setChoix] = useState<'pouvoir' | 'limitation' | null>(null)
   const sup = pack?.superieurs.find((s) => s.id === p.identite.superieurId)
   const privilegies = new Set((sup?.pouvoirsPrivilegies ?? []).map(norm))
+  const nomSup = (id?: string) => pack?.superieurs.find((s) => s.id === id)?.nom ?? id
+  /** Un joueur n'a droit qu'au pouvoir propre de son supérieur (sauf accord du MJ). */
+  const autorise = (r: PouvoirRef) => estMj || !r.superieur || r.superieur === p.identite.superieurId
+  /** Pouvoir propre d'un autre supérieur, présent sur la fiche sans accord du MJ. */
+  const horsRegle = (pw: PouvoirPerso): PouvoirRef | undefined => {
+    if (estMj || pw.accordeParMJ) return undefined
+    const r = pw.refId ? pack?.pouvoirs.find((x) => x.id === pw.refId) : pack?.pouvoirs.find((x) => x.camp === p.camp && x.superieur && norm(x.nom) === norm(pw.nom))
+    return r && !autorise(r) ? r : undefined
+  }
 
   const setPouvoir = (id: string, patch: Partial<PouvoirPerso>) =>
     maj((x) => ({ ...x, pouvoirs: x.pouvoirs.map((y) => (y.id === id ? { ...y, ...patch } : y)) }))
@@ -41,6 +52,7 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
   /** Si le nom tapé correspond exactement à un pouvoir du référentiel, on complète les cases vides. */
   const nommerPouvoir = (pw: PouvoirPerso, nom: string) => {
     const r = pack?.pouvoirs.find((x) => x.camp === p.camp && norm(x.nom) === norm(nom))
+    if (r && !autorise(r)) return setPouvoir(pw.id, { nom, refId: undefined })
     if (!r) return setPouvoir(pw.id, { nom, refId: pw.refId && pack?.pouvoirs.find((x) => x.id === pw.refId)?.nom === nom ? pw.refId : undefined })
     setPouvoir(pw.id, {
       nom: r.nom,
@@ -87,7 +99,8 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
               <div key={pw.id} className="pouvoir-row">
                 <div className="row">
                   <input className="pouvoir-nom" list={LISTES.pouvoirs} value={pw.nom} onChange={(e) => nommerPouvoir(pw, e.target.value)} placeholder="Nom du pouvoir (suggestions en tapant)" aria-label="Nom du pouvoir" />
-                  {ref?.superieur && <span className="tag tag-prince">{pack?.superieurs.find((s) => s.id === ref.superieur)?.nom}</span>}
+                  {ref?.superieur && <span className="tag tag-prince">{nomSup(ref.superieur)}</span>}
+                  {pw.accordeParMJ && <span className="tag tag-mj" title="Exception accordée par le MJ">accordé par le MJ</span>}
                   {privilegies.has(norm(pw.nom)) && <span className="tag" title="Pouvoir privilégié de ton supérieur">privilégié</span>}
                   {ref && (
                     <Info title={ref.nom}>
@@ -110,6 +123,11 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
                     </label>
                   ))}
                 </div>
+                {horsRegle(pw) && (
+                  <p className="alert small">
+                    Pouvoir propre de {nomSup(horsRegle(pw)!.superieur)} : seul le MJ peut te l'accorder. Il ne compte pas tant que ton MJ ne l'a pas validé.
+                  </p>
+                )}
                 <input className="pouvoir-notes" value={pw.notes} onChange={(e) => setPouvoir(pw.id, { notes: e.target.value })} placeholder="Notes (choix faits, variantes…)" />
               </div>
             )
@@ -160,8 +178,8 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
       {choix === 'pouvoir' && pack && (
         <Chooser
           title="Ajouter un pouvoir"
-          items={pack.pouvoirs.filter((r) => r.camp === p.camp)}
-          sub={(r) => [r.superieur ? `Pouvoir de ${pack.superieurs.find((s) => s.id === r.superieur)?.nom ?? r.superieur}` : r.rubrique, r.cout, r.type].filter(Boolean).join(' · ')}
+          items={pack.pouvoirs.filter((r) => r.camp === p.camp && autorise(r))}
+          sub={(r) => [r.superieur ? `Pouvoir de ${nomSup(r.superieur)}` : r.rubrique, r.cout, r.type].filter(Boolean).join(' · ')}
           mark={(r) => privilegies.has(norm(r.nom)) || r.superieur === p.identite.superieurId}
           onPick={ajouterPouvoir}
           onClose={() => setChoix(null)}
@@ -180,7 +198,7 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
   )
 }
 
-function Chooser<T extends { id: string; nom: string; resume?: string }>(p: {
+export function Chooser<T extends { id: string; nom: string; resume?: string }>(p: {
   title: string
   items: T[]
   sub: (t: T) => string

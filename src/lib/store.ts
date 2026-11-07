@@ -36,6 +36,8 @@ export type State = {
   derniereSauvegarde: number | null
   /** Dernière version dont l'utilisateur a lu les nouveautés */
   nouveautesVues: string | null
+  /** Annonce à afficher (ex. pouvoir accordé par le MJ) */
+  annonce: { titre: string; texte: string } | null
   /** Message d'erreur si le démarrage a échoué (données non chargées) */
   erreurDemarrage: string | null
   logs: LogLine[]
@@ -73,6 +75,7 @@ let state: State = {
   derniereSauvegarde: null,
   nouveautesVues: null,
   erreurDemarrage: null,
+  annonce: null,
   logs: [],
 }
 

@@ -7,8 +7,8 @@ import { uid } from './storage'
 import type { Pack } from './pack'
 import { isPack } from './pack'
 import type { Personnage } from './personnage'
-import { normaliser } from './personnage'
-import { persoActif } from './store'
+import { nomAffiche, normaliser, nouveauPouvoir } from './personnage'
+import { majPerso, persoActif } from './store'
 import type { ChatMessage, Groupe, Peer, Profile, RelayKind, Role, TableInfo } from './types'
 import { RELAYS } from './types'
 
@@ -28,6 +28,7 @@ type Actions = {
   refAck: MessageAction<JsonValue>
   grp: MessageAction<JsonValue>
   grpQuit: MessageAction<JsonValue>
+  accord: MessageAction<JsonValue>
 }
 
 let room: Room | null = null
@@ -161,6 +162,7 @@ function makeActions(r: Room): Actions {
     refAck: r.makeAction<JsonValue>('ref-ack'),
     grp: r.makeAction<JsonValue>('grp'),
     grpQuit: r.makeAction<JsonValue>('grp-quit'),
+    accord: r.makeAction<JsonValue>('accord'),
   }
 
   a.hello.onMessage = (d, { peerId }) => onHello(d as unknown as Hello, peerId)
@@ -199,6 +201,28 @@ function makeActions(r: Room): Actions {
   }
 
   a.grp.onMessage = (d) => recevoirGroupe(d as unknown as Groupe)
+
+  // Le MJ accorde un pouvoir (exception aux règles) à l'un des personnages de ce joueur
+  a.accord.onMessage = (d, { peerId }) => {
+    if (getState().peers[peerId]?.role !== 'mj') return
+    const { persoId, refId } = d as { persoId: string; refId: string }
+    const perso = getState().personnages[persoId]
+    const ref = getState().pack?.pouvoirs.find((x) => x.id === refId)
+    if (!perso || !ref) {
+      log('Le MJ a accordé un pouvoir, mais le personnage ou le pouvoir est introuvable ici.', 'erreur')
+      return
+    }
+    majPerso(persoId, (x) => {
+      const existe = x.pouvoirs.find((pw) => pw.refId === refId)
+      if (existe) return { ...x, pouvoirs: x.pouvoirs.map((pw) => (pw.refId === refId ? { ...pw, accordeParMJ: true } : pw)) }
+      const np = { ...nouveauPouvoir(), refId, nom: ref.nom, type: ref.type ?? '', cout: ref.cout ?? '', portee: ref.portee ?? '', att: ref.carac ?? '', def: ref.defense ?? '', num: ref.d666 ?? '', accordeParMJ: true }
+      return { ...x, pouvoirs: [...x.pouvoirs, np] }
+    })
+    setState({ annonce: { titre: 'Pouvoir accordé par le MJ', texte: `${peerName(peerId)} accorde le pouvoir « ${ref.nom} » à ${nomAffiche(perso)}. Il a été ajouté à la fiche (onglet Pouvoirs).` } })
+    log(`Le MJ a accordé « ${ref.nom} » à ${nomAffiche(perso)}.`, 'ok')
+    // La fiche mise à jour repart vers le MJ
+    if (getState().actifId === persoId) void sendSheet([peerId])
+  }
 
   a.grpQuit.onMessage = (d) => {
     const { id, deviceId } = d as { id: string; deviceId: string }
@@ -280,6 +304,15 @@ function onHello(h: Hello, peerId: string): void {
 }
 
 // ───────────────────────── Messagerie ─────────────────────────
+
+/** MJ : accorde un pouvoir (ex. pouvoir propre d'un autre supérieur) au personnage d'un joueur connecté. */
+export async function accorderPouvoir(deviceId: string, persoId: string, refId: string): Promise<boolean> {
+  const pid = peerIdFor(deviceId)
+  if (!A || !pid || me().role !== 'mj') return false
+  await A.accord.send({ persoId, refId }, { target: pid })
+  log('Pouvoir accordé envoyé au joueur.', 'ok')
+  return true
+}
 
 export function convDirecte(deviceId: string): string {
   return `d:${deviceId}`

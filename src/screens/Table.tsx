@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { QrImage, QrScanModal } from '../components'
 import { appUrl, joinUrl, newTable, parseJoin } from '../lib/codes'
-import { joinTable, joueurPeerIds, leaveTable, mjPeerIds, roleLabel, sendReferentiel, sendSheet } from '../lib/p2p'
+import { accorderPouvoir, joinTable, joueurPeerIds, leaveTable, mjPeerIds, peerIdFor, roleLabel, sendReferentiel, sendSheet } from '../lib/p2p'
 import { nomAffiche } from '../lib/personnage'
-import { persoActif } from '../lib/store'
+import { heure, persoActif, setState, useStore } from '../lib/store'
+import type { FicheRecue, RelayKind, TableInfo } from '../lib/types'
+import { Chooser } from './fiche/Pouvoirs'
 import PersoResume from './PersoResume'
-import { heure, setState, useStore } from '../lib/store'
-import type { RelayKind, TableInfo } from '../lib/types'
 import { RELAYS } from '../lib/types'
 
 export default function Table({ pendingJoin, clearPending }: { pendingJoin: TableInfo | null; clearPending: () => void }) {
@@ -130,11 +130,46 @@ function MjTools() {
                 <b>{nomAffiche(r.perso)}</b> — {r.name} · reçue à {heure(r.receivedAt)}
               </summary>
               <PersoResume p={r.perso} />
+              <AccorderPouvoir fiche={r} />
             </details>
           ))
         )}
       </section>
     </>
+  )
+}
+
+/** MJ : accorder au personnage d'un joueur un pouvoir propre d'un autre supérieur (exception aux règles). */
+function AccorderPouvoir({ fiche }: { fiche: FicheRecue }) {
+  const s = useStore()
+  const [ouvert, setOuvert] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+  if (!s.pack) return null
+  const pack = s.pack
+  const enLigne = !!peerIdFor(fiche.deviceId)
+  const propres = pack.pouvoirs.filter((r) => r.superieur && r.camp === fiche.perso.camp && r.superieur !== fiche.perso.identite.superieurId)
+  return (
+    <div className="stack accorder">
+      <button className="btn btn-small" disabled={!enLigne} onClick={() => setOuvert(true)} title={enLigne ? '' : 'Le joueur doit être connecté à la table'}>
+        ✨ Accorder un pouvoir propre d'un autre supérieur
+      </button>
+      {!enLigne && <p className="muted small">Le joueur doit être connecté à la table.</p>}
+      {msg && <p className="note-ok">{msg}</p>}
+      {ouvert && (
+        <Chooser
+          title={`Accorder un pouvoir à ${nomAffiche(fiche.perso)}`}
+          items={propres}
+          sub={(r) => [`Pouvoir de ${pack.superieurs.find((x) => x.id === r.superieur)?.nom ?? r.superieur}`, r.cout, r.type].filter(Boolean).join(' · ')}
+          onPick={(r) => {
+            setOuvert(false)
+            void accorderPouvoir(fiche.deviceId, fiche.perso.id, r.id).then((ok) =>
+              setMsg(ok ? `« ${r.nom} » accordé : la fiche mise à jour va revenir.` : "Envoi impossible : le joueur n'est plus connecté."),
+            )
+          }}
+          onClose={() => setOuvert(false)}
+        />
+      )}
+    </div>
   )
 }
 
