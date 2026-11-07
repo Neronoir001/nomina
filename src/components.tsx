@@ -4,6 +4,7 @@ import QrScanner from 'qr-scanner'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { parseJoin } from './lib/codes'
 import { canPromptInstall, isAndroid, isIOS, isStandalone, onInstallChange, promptInstall } from './lib/install'
+import { surveillerMisesAJour } from './lib/maj'
 import type { Status } from './lib/store'
 import type { TableInfo } from './lib/types'
 
@@ -124,7 +125,11 @@ export function UpdatePrompt() {
     needRefresh: [needRefresh, setNeedRefresh],
     offlineReady: [offlineReady, setOfflineReady],
     updateServiceWorker,
-  } = useRegisterSW()
+  } = useRegisterSW({
+    onRegisteredSW: (_url, r) => {
+      if (r) surveillerMisesAJour(r)
+    },
+  })
   useEffect(() => {
     if (!offlineReady) return
     const t = window.setTimeout(() => setOfflineReady(false), 5000)

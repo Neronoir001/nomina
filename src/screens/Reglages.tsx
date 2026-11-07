@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { exporterPack, exporterTout, importerFichier } from '../lib/fichiers'
+import { verifierMaj } from '../lib/maj'
 import { roleLabel } from '../lib/p2p'
 import { setState, useStore } from '../lib/store'
 import { Card, Empty, FilePick } from '../ui'
@@ -114,13 +115,39 @@ export default function Reglages() {
           <button className="btn" onClick={() => setDiag(true)}>
             🩺 Diagnostic de connexion
           </button>
-          <p className="muted small">
-            Nomina version {__APP_VERSION__}.
-          </p>
+          <MiseAJour />
         </div>
       </Card>
 
       {profil && <Profil onClose={() => setProfil(false)} />}
+    </div>
+  )
+}
+
+function MiseAJour() {
+  const [etat, setEtat] = useState<'' | 'en-cours' | 'maj' | 'a-jour' | 'hors-ligne' | 'indisponible'>('')
+  const messages = {
+    '': '',
+    'en-cours': 'Recherche en cours…',
+    maj: 'Une nouvelle version arrive : touche « Mettre à jour » dans le bandeau qui va apparaître en haut.',
+    'a-jour': 'Nomina est à jour.',
+    'hors-ligne': "Pas de connexion internet : impossible de vérifier pour l'instant.",
+    indisponible: "La vérification n'est possible que dans l'appli publiée (pas dans cet aperçu).",
+  }
+  return (
+    <div className="stack">
+      <p className="muted small">Nomina version {__APP_VERSION__}.</p>
+      <button
+        className="btn"
+        disabled={etat === 'en-cours'}
+        onClick={() => {
+          setEtat('en-cours')
+          void verifierMaj().then(setEtat)
+        }}
+      >
+        🔄 Rechercher une mise à jour
+      </button>
+      {etat && <p className={etat === 'a-jour' || etat === 'maj' ? 'note-ok' : 'muted small'}>{messages[etat]}</p>}
     </div>
   )
 }

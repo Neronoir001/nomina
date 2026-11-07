@@ -26,14 +26,22 @@ export default function App() {
   const [tab, setTab] = useState<Tab>(pendingJoin ? 'table' : 'fiche')
   const [editProfile, setEditProfile] = useState(false)
 
+  // La vérification des mises à jour tourne dès le premier écran.
   if (!s.hydrated) {
     return (
       <div className="welcome">
         <img className="hero-icon pulse" src={`${import.meta.env.BASE_URL}icon-192.png`} alt="Chargement de Nomina" width={96} height={96} />
+        <UpdatePrompt />
       </div>
     )
   }
-  if (!s.profile) return <Profil first />
+  if (!s.profile)
+    return (
+      <>
+        <Profil first />
+        <UpdatePrompt />
+      </>
+    )
 
   const unread = Object.values(s.unread).reduce((a, b) => a + b, 0)
   const peerCount = Object.keys(s.peers).length
