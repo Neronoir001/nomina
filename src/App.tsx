@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { StatusPill, UpdatePrompt } from './components'
 import { BandeauAnnulation } from './BoutonPP'
 import { ConseilsDemarrage, EcranErreur } from './Erreurs'
+import { SECTION_PAR_ECRAN } from './guide/contenu'
+import Guide from './guide/Guide'
+import Visite from './guide/Visite'
 import { parseJoin } from './lib/codes'
 import { roleLabel } from './lib/p2p'
 import { log, setState, useStore } from './lib/store'
@@ -28,6 +31,8 @@ export default function App() {
   const [pendingJoin, setPendingJoin] = useState<TableInfo | null>(readPendingJoin)
   const [tab, setTab] = useState<Tab>(pendingJoin ? 'table' : 'accueil')
   const [editProfile, setEditProfile] = useState(false)
+  const [guide, setGuide] = useState<string | null>(null)
+  const [revoirVisite, setRevoirVisite] = useState(false)
 
   // La vérification des mises à jour tourne dès le premier écran.
   if (!s.hydrated) {
@@ -67,7 +72,10 @@ export default function App() {
         <button className="chip tronque" onClick={() => setEditProfile(true)} title="Modifier mon profil">
           {s.profile.name} · {roleLabel(s.profile.role)}
         </button>
-        <button className={`icon-btn gear${tab === 'reglages' ? ' on' : ''}`} onClick={() => setTab('reglages')} title="Réglages" aria-label="Réglages">
+        <button className="icon-btn aide" data-visite="aide" onClick={() => setGuide(SECTION_PAR_ECRAN[tab] ?? '')} title="Aide : ouvrir le guide" aria-label="Aide">
+          ?
+        </button>
+        <button data-visite="reglages" className={`icon-btn gear${tab === 'reglages' ? ' on' : ''}`} onClick={() => setTab('reglages')} title="Réglages" aria-label="Réglages">
           ⚙️
         </button>
       </header>
@@ -81,7 +89,7 @@ export default function App() {
         {tab === 'reglages' && <Reglages />}
       </main>
 
-      <nav className="tabbar">
+      <nav className="tabbar" data-visite="onglets">
         <TabButton id="accueil" cur={tab} set={setTab} label="Accueil" icon="🏠" />
         <TabButton id="fiche" cur={tab} set={setTab} label="Fiche" icon="📜" />
         <TabButton id="referentiel" cur={tab} set={setTab} label="Référentiel" icon="📚" />
@@ -90,6 +98,27 @@ export default function App() {
       </nav>
 
       {editProfile && <Profil onClose={() => setEditProfile(false)} />}
+
+      {guide !== null && (
+        <Guide
+          section={guide || undefined}
+          onClose={() => setGuide(null)}
+          revoirVisite={() => {
+            setGuide(null)
+            setTab('accueil')
+            setRevoirVisite(true)
+          }}
+        />
+      )}
+
+      {(revoirVisite || !s.visiteFaite) && !editProfile && (
+        <Visite
+          onFin={() => {
+            setRevoirVisite(false)
+            setState({ visiteFaite: true })
+          }}
+        />
+      )}
 
       {s.annonce && (
         <Modal title={s.annonce.titre} onClose={() => setState({ annonce: null })}>
@@ -140,7 +169,7 @@ export default function App() {
 
 function TabButton(p: { id: Tab; cur: Tab; set: (t: Tab) => void; label: string; icon: string; badge?: number }) {
   return (
-    <button className={`tab${p.cur === p.id ? ' tab-on' : ''}`} onClick={() => p.set(p.id)} aria-current={p.cur === p.id}>
+    <button data-visite={p.id} className={`tab${p.cur === p.id ? ' tab-on' : ''}`} onClick={() => p.set(p.id)} aria-current={p.cur === p.id}>
       <span className="tab-icon" aria-hidden>
         {p.icon}
       </span>

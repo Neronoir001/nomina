@@ -44,6 +44,15 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.7.0',
+    date: '8 novembre 2026',
+    points: [
+      'Nouveau guide intégré : touche le bouton « ? » en haut de l’écran, il s’ouvre directement à la page de l’écran affiché.',
+      'Le guide propose un parcours « Je suis joueur » ou « Je suis MJ », une recherche, des questions fréquentes, un glossaire, et peut être imprimé ou enregistré en PDF.',
+      'Une courte visite guidée présente l’appli au premier lancement ; elle peut être revue depuis le guide.',
+    ],
+  },
+  {
     version: '0.6.0',
     date: '8 novembre 2026',
     points: [

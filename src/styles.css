@@ -178,3 +178,82 @@ textarea { resize: vertical; }
 @media (max-width: 380px) {
   .grid3 { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ───── Bouton d'aide ───── */
+.icon-btn.aide {
+  font-family: Georgia, serif; font-weight: 700; font-size: 1.05rem; color: var(--gold);
+  border: 1px solid var(--border); border-radius: 999px; width: 32px; height: 32px; min-width: 32px; padding: 0;
+}
+
+/* ───── Guide ───── */
+.guide-page {
+  position: fixed; inset: 0; z-index: 30; background: var(--bg);
+  display: flex; flex-direction: column;
+}
+.guide-tete {
+  display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  padding: calc(env(safe-area-inset-top) + .5rem) 16px .5rem; border-bottom: 1px solid var(--border);
+  background: rgba(20, 16, 18, .95);
+}
+.guide-tete h2 { margin: 0; }
+.guide-corps {
+  flex: 1; overflow-y: auto; width: 100%; max-width: 720px; margin: 0 auto;
+  padding: 16px 16px calc(env(safe-area-inset-bottom) + 32px);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.guide-recherche { width: 100%; }
+.guide-sommaire { display: flex; flex-wrap: wrap; gap: .5rem; }
+.guide-lien {
+  background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 999px;
+  padding: .45rem .8rem; font: inherit; font-size: .9rem; cursor: pointer; min-height: 40px;
+}
+.guide-lien:hover { border-color: var(--gold); }
+.guide-section {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px;
+  scroll-margin-top: 12px; display: flex; flex-direction: column; gap: .5rem;
+}
+.guide-section h3 { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
+.guide-texte { display: flex; flex-direction: column; gap: .55rem; }
+.guide-texte h4 { margin: .5rem 0 0; color: var(--gold); font-size: 1rem; }
+.guide-texte ul, .guide-texte ol { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: column; gap: .3rem; }
+.guide-texte b, .guide-faq b { color: var(--gold-soft); }
+.guide-faq { border-top: 1px solid var(--border); padding: .6rem 0; }
+.guide-faq summary { cursor: pointer; font-weight: 600; min-height: 32px; }
+.guide-faq p { margin-top: .4rem; color: var(--muted); }
+.guide-glossaire { margin: 0; display: grid; grid-template-columns: minmax(90px, auto) 1fr; gap: .45rem .9rem; }
+.guide-glossaire dt { font-weight: 700; color: var(--gold-soft); }
+.guide-glossaire dd { margin: 0; color: var(--muted); }
+@media (max-width: 480px) {
+  .guide-glossaire { grid-template-columns: 1fr; gap: .1rem; }
+  .guide-glossaire dd { margin-bottom: .5rem; }
+}
+
+/* ───── Visite guidée ───── */
+.visite { position: fixed; inset: 0; z-index: 60; }
+.visite-fond { position: absolute; inset: 0; background: rgba(0, 0, 0, .72); }
+.visite-spot {
+  position: absolute; border-radius: 12px; border: 2px solid var(--gold);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, .72); transition: all .25s ease; pointer-events: none;
+}
+.visite-bulle {
+  position: absolute; left: 16px; right: 16px; margin: 0 auto; max-width: 400px;
+  background: var(--panel); border: 1px solid var(--gold); border-radius: var(--radius); padding: 16px;
+  display: flex; flex-direction: column; gap: .5rem; box-shadow: 0 8px 30px rgba(0, 0, 0, .6);
+}
+.visite-centre .visite-bulle { top: 50%; transform: translateY(-50%); }
+
+/* ───── Impression du guide ───── */
+@media print {
+  body.imprime-guide { background: #fff; }
+  body.imprime-guide .app > :not(.guide-page) { display: none !important; }
+  body.imprime-guide .guide-page { position: static; background: #fff; color: #000; }
+  body.imprime-guide .guide-tete .icon-btn,
+  body.imprime-guide .guide-outils,
+  body.imprime-guide .guide-sommaire { display: none !important; }
+  body.imprime-guide .guide-corps { overflow: visible; max-width: none; padding: 0; }
+  body.imprime-guide .guide-section { background: none; border: 0; border-bottom: 1px solid #999; border-radius: 0; break-inside: avoid-page; }
+  body.imprime-guide h2, body.imprime-guide h3, body.imprime-guide h4,
+  body.imprime-guide b, body.imprime-guide dt { color: #000 !important; }
+  body.imprime-guide .muted, body.imprime-guide dd, body.imprime-guide .guide-faq p { color: #333 !important; }
+  body.imprime-guide .guide-tete { background: none; border: 0; }
+}

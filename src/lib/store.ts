@@ -37,6 +37,8 @@ export type State = {
   derniereSauvegarde: number | null
   /** Dernière version dont l'utilisateur a lu les nouveautés */
   nouveautesVues: string | null
+  /** Visite guidée déjà vue (ou passée) */
+  visiteFaite: boolean
   /** Annonce à afficher (ex. pouvoir accordé par le MJ) */
   annonce: { titre: string; texte: string } | null
   /** Dernière dépense de PP, annulable quelques secondes */
@@ -48,7 +50,7 @@ export type State = {
 
 const PERSISTED = [
   'profile', 'personnages', 'actifId', 'pack', 'signalements', 'table', 'contacts', 'messages', 'unread',
-  'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues',
+  'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues', 'visiteFaite',
   'groupes', 'groupesQuittes',
 ] as const
 type PersistedKey = (typeof PERSISTED)[number]
@@ -77,6 +79,7 @@ let state: State = {
   packPropose: null,
   derniereSauvegarde: null,
   nouveautesVues: null,
+  visiteFaite: false,
   erreurDemarrage: null,
   annonce: null,
   annulation: null,
