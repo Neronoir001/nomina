@@ -44,6 +44,15 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.9.0',
+    date: '8 novembre 2026',
+    points: [
+      'Jets secrets : bouton 🎲 sur la fiche et à l’accueil. Choisis un talent ou une caractéristique ; les dés sont lancés chez le MJ, lui seul voit le résultat.',
+      'MJ : chaque demande s’ouvre aussitôt avec les dés, le résultat, le RU, le seuil et le verdict (111 et 666 signalés). La difficulté reste modifiable.',
+      'MJ : jet secret à l’insu d’un joueur depuis sa fiche reçue (onglet Table), jet libre pour les PNJ, et journal des jets.',
+    ],
+  },
+  {
     version: '0.8.1',
     date: '8 novembre 2026',
     points: ['Correction : l’onglet « MJ » 🎭 était caché sous le bas de l’écran. Il apparaît maintenant à droite de « Messages » (avec le rôle Maître du jeu).'],

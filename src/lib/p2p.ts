@@ -11,6 +11,8 @@ import { nomAffiche, normaliser, nouveauPouvoir } from './personnage'
 import { majPerso, persoActif } from './store'
 import type { ChatMessage, Groupe, Peer, Profile, ReglesMaison, RelayKind, Role, TableInfo } from './types'
 import { RELAYS } from './types'
+import type { DemandeJet, JetSecret } from './jets'
+import { nouveauJet } from './jets'
 
 const APP_ID = 'nomina-insmv'
 
@@ -30,6 +32,8 @@ type Actions = {
   grpQuit: MessageAction<JsonValue>
   accord: MessageAction<JsonValue>
   regles: MessageAction<JsonValue>
+  jet: MessageAction<JsonValue>
+  jetAck: MessageAction<JsonValue>
 }
 
 let room: Room | null = null
@@ -165,6 +169,32 @@ function makeActions(r: Room): Actions {
     grpQuit: r.makeAction<JsonValue>('grp-quit'),
     accord: r.makeAction<JsonValue>('accord'),
     regles: r.makeAction<JsonValue>('regles'),
+    jet: r.makeAction<JsonValue>('jet'),
+    jetAck: r.makeAction<JsonValue>('jet-ack'),
+  }
+
+  // MJ : un joueur demande un jet secret. Les dés sont lancés ici, chez le MJ : le joueur ne voit rien.
+  a.jet.onMessage = (d, { peerId }) => {
+    if (me().role !== 'mj') return
+    const dem = d as unknown as DemandeJet
+    if (!dem?.id || typeof dem.valeur !== 'number') return
+    void a.jetAck.send({ id: dem.id }, { target: peerId })
+    if (getState().jetsSecrets.some((j) => j.id === dem.id)) return
+    const jet: JetSecret = {
+      ...nouveauJet(
+        { quoi: String(dem.quoi ?? ''), valeur: dem.valeur, ligne: dem.ligne ?? 'moyen', decalage: Number(dem.decalage) || 0 },
+        { id: dem.id, origine: 'joueur', joueurNom: peerName(peerId), persoNom: String(dem.persoNom ?? ''), note: String(dem.note ?? '') },
+      ),
+      nouveau: true,
+    }
+    setState((s) => ({ jetsSecrets: [jet, ...s.jetsSecrets].slice(0, 200), jetOuvert: s.jetOuvert ?? jet.id }))
+    navigator.vibrate?.([60, 40, 60])
+    log(`Jet secret demandé par ${jet.joueurNom} : ${jet.quoi}.`, 'ok')
+  }
+
+  a.jetAck.onMessage = (d) => {
+    const { id } = d as { id: string }
+    setState((s) => ({ jetsDemandes: { ...s.jetsDemandes, [id]: 'recu' } }))
   }
 
   // Règles maison publiées par le MJ
@@ -319,6 +349,16 @@ function onHello(h: Hello, peerId: string): void {
   // … et ses règles maison
   const rm = getState().reglesMaison
   if (me().role === 'mj' && h.role === 'joueur' && rm) void A?.regles.send(rm as unknown as JsonValue, { target: peerId })
+}
+
+/** Joueur : envoie une demande de jet secret au(x) MJ connecté(s). Renvoie false si aucun MJ n'est là. */
+export async function demanderJet(dem: DemandeJet): Promise<boolean> {
+  const cibles = mjPeerIds()
+  if (!A || cibles.length === 0) return false
+  setState((s) => ({ jetsDemandes: { ...s.jetsDemandes, [dem.id]: 'envoye' } }))
+  await A.jet.send(dem as unknown as JsonValue, { target: cibles })
+  log(`Jet secret envoyé au MJ : ${dem.quoi}.`)
+  return true
 }
 
 /** MJ : publie les règles maison à tous les joueurs (connectés maintenant, ou à leur prochaine connexion). */

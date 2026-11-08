@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react'
 import { clear, createStore, getMany, set as idbSet } from 'idb-keyval'
 import type { Pack } from './pack'
 import type { Annulation } from './pp'
+import type { JetSecret } from './jets'
 import type { Personnage } from './personnage'
 import { depuisFicheProto, nomAffiche, normaliser, nouveauPersonnage } from './personnage'
 import type { ChatMessage, Contact, FicheRecue, Groupe, LogLine, Peer, Profile, ReglesMaison, RelayKind, Signalement, TableInfo } from './types'
@@ -41,6 +42,12 @@ export type State = {
   visiteFaite: boolean
   /** Règles maison publiées par le MJ (visibles de tous les joueurs) */
   reglesMaison: ReglesMaison | null
+  /** MJ : jets secrets lancés ou reçus */
+  jetsSecrets: JetSecret[]
+  /** MJ : jet affiché dans la fenêtre de résultat */
+  jetOuvert: string | null
+  /** Joueur : demandes de jet envoyées au MJ (non conservées) */
+  jetsDemandes: Record<string, 'envoye' | 'recu'>
   /** Annonce à afficher (ex. pouvoir accordé par le MJ) */
   annonce: { titre: string; texte: string } | null
   /** Dernière dépense de PP, annulable quelques secondes */
@@ -52,7 +59,7 @@ export type State = {
 
 const PERSISTED = [
   'profile', 'personnages', 'actifId', 'pack', 'signalements', 'table', 'contacts', 'messages', 'unread',
-  'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues', 'visiteFaite', 'reglesMaison',
+  'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues', 'visiteFaite', 'reglesMaison', 'jetsSecrets',
   'groupes', 'groupesQuittes',
 ] as const
 type PersistedKey = (typeof PERSISTED)[number]
@@ -83,6 +90,9 @@ let state: State = {
   nouveautesVues: null,
   visiteFaite: false,
   reglesMaison: null,
+  jetsSecrets: [],
+  jetOuvert: null,
+  jetsDemandes: {},
   erreurDemarrage: null,
   annonce: null,
   annulation: null,

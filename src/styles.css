@@ -274,3 +274,26 @@ label.case input { width: auto; margin-top: .2rem; flex: none; }
 .grid-caracs.mj-caracs input { text-align: center; padding-left: .2rem; padding-right: .2rem; }
 @media (max-width: 420px) { .grid-caracs.mj-caracs { grid-template-columns: repeat(3, 1fr); } }
 .regle-maison { border-top: 1px solid var(--border); padding-top: .6rem; margin-top: .6rem; display: flex; flex-direction: column; gap: .25rem; }
+
+/* ───── Jets secrets ───── */
+.des { display: flex; justify-content: center; gap: .7rem; }
+.de {
+  width: 56px; height: 56px; border-radius: 12px; display: grid; place-items: center;
+  font: 700 1.7rem Georgia, serif; background: var(--gold-soft); color: #1a1208; box-shadow: 0 2px 6px rgba(0, 0, 0, .5);
+}
+.de-ru { background: var(--panel-2); color: var(--gold-soft); border: 1px solid var(--gold); }
+.verdict { text-align: center; font: 700 1.4rem Georgia, serif; }
+.verdict-ok { color: var(--ok); }
+.verdict-ko { color: #ff8a84; }
+.special { text-align: center; font-weight: 700; padding: .5rem; border-radius: 10px; }
+.special-666 { background: rgba(195, 49, 42, .25); color: #ffb4ad; }
+.special-111 { background: rgba(246, 231, 184, .18); color: var(--gold-soft); }
+.journal-jets { display: flex; flex-direction: column; gap: 4px; }
+.jet-ligne {
+  width: 100%; display: flex; align-items: center; gap: .5rem; text-align: left; font: inherit; color: var(--text);
+  background: var(--panel-2); border: 1px solid transparent; border-radius: 10px; padding: .5rem .6rem; cursor: pointer; min-height: 44px;
+}
+.jet-ligne.nouveau { border-color: var(--gold); }
+.pastille { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+.pastille.ok { background: var(--ok); }
+.pastille.ko { background: var(--red); }

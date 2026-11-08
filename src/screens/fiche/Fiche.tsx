@@ -6,6 +6,7 @@ import { nomAffiche, nouveauPersonnage } from '../../lib/personnage'
 import { uid } from '../../lib/storage'
 import { creerPerso, listePersos, majPerso, persoActif, setState, supprimerPerso, useStore } from '../../lib/store'
 import { FilePick, Modal, Seg } from '../../ui'
+import { BoutonJetMJ, BoutonJetSecret } from '../../JetSecret'
 import Identite from './Identite'
 import Pouvoirs from './Pouvoirs'
 import Serviteurs from './Serviteurs'
@@ -57,6 +58,11 @@ export default function Fiche() {
             </option>
           ))}
         </select>
+        {s.profile?.role === 'mj' ? (
+          <BoutonJetMJ perso={perso} joueurNom="" label="🎲" className="btn" />
+        ) : (
+          <BoutonJetSecret perso={perso} label="🎲" />
+        )}
         <button className="btn" onClick={() => setCreation(true)} title="Nouveau personnage">
           ＋
         </button>

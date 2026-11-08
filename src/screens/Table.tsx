@@ -7,6 +7,7 @@ import { heure, persoActif, setState, useStore } from '../lib/store'
 import type { FicheRecue, RelayKind, TableInfo } from '../lib/types'
 import { Chooser } from './fiche/Pouvoirs'
 import PersoResume from './PersoResume'
+import { BoutonJetMJ, JournalJets } from '../JetSecret'
 import { RELAYS } from '../lib/types'
 
 export default function Table({ pendingJoin, clearPending }: { pendingJoin: TableInfo | null; clearPending: () => void }) {
@@ -101,6 +102,8 @@ function MjTools() {
   const nbJoueurs = joueurPeerIds().length
   return (
     <>
+      <JournalJets />
+
       <section className="card stack">
         <h3>Référentiel</h3>
         {s.pack ? (
@@ -130,6 +133,9 @@ function MjTools() {
                 <b>{nomAffiche(r.perso)}</b> — {r.name} · reçue à {heure(r.receivedAt)}
               </summary>
               <PersoResume p={r.perso} />
+              <div className="row">
+                <BoutonJetMJ perso={r.perso} joueurNom={r.name} />
+              </div>
               <AccorderPouvoir fiche={r} />
             </details>
           ))

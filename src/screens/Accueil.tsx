@@ -12,6 +12,7 @@ import { nomAffiche, nouveauPersonnage } from '../lib/personnage'
 import { creerPerso, heure, listePersos, majPerso, setState, useStore } from '../lib/store'
 import { Card, FilePick, Stepper } from '../ui'
 import { BoutonPP } from '../BoutonPP'
+import { BoutonJetMJ, BoutonJetSecret } from '../JetSecret'
 
 export type Onglet = 'accueil' | 'fiche' | 'referentiel' | 'table' | 'messages' | 'mj' | 'reglages'
 
@@ -142,7 +143,7 @@ function Personnages({ aller }: { aller: (o: Onglet) => void }) {
 }
 
 function CartePerso({ p, actif, ouvrir }: { p: Personnage; actif: boolean; ouvrir: () => void }) {
-  const pack = useStore().pack
+  const { pack, profile } = useStore()
   const sup = pack?.superieurs.find((x) => x.id === p.identite.superieurId)
   const supNom = sup?.nom ?? p.identite.superieurLibre
   const details = [supNom, p.identite.grade].filter(Boolean).join(' · ')
@@ -175,6 +176,11 @@ function CartePerso({ p, actif, ouvrir }: { p: Personnage; actif: boolean; ouvri
             </li>
           ))}
         </ul>
+      ) : null}
+      {actif ? (
+        <div className="row">
+          {profile?.role === 'mj' ? <BoutonJetMJ perso={p} joueurNom="" /> : <BoutonJetSecret perso={p} className="btn btn-small" />}
+        </div>
       ) : null}
       {actif ? null : (
         <p className="muted small carte-perso-resume">

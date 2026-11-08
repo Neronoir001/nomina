@@ -145,6 +145,27 @@ Les compteurs **PP actuels** et **PP max** restent toujours modifiables à la ma
 - En cas de souci : ⚙️ → **Diagnostic de connexion**.`,
   },
   {
+    id: 'jets',
+    titre: 'Les jets secrets',
+    icone: '🎲',
+    public: 'tous',
+    corps: `Les dés physiques servent pour tout, **sauf les jets secrets** : ceux dont seul le MJ doit connaître le résultat.
+
+## Pour le joueur
+1. Touche **🎲** en haut de la fiche, ou **🎲 Jet secret** sur la carte du personnage à l'accueil.
+2. Choisis le **talent** ou la **caractéristique** testé (les talents que tu n'as pas sont aussi proposés, en très difficile), et ajoute si besoin une précision pour le MJ.
+3. **Envoyer au MJ** : les dés sont lancés **sur l'appareil du MJ**. Tu vois seulement « ✓ Le MJ a reçu ta demande ». Les autres joueurs ne savent même pas qu'un jet a eu lieu.
+
+Le MJ doit être connecté à la Table.
+
+## Pour le MJ
+- Une demande de joueur ouvre aussitôt une fenêtre avec les **trois dés**, le **résultat** (les deux premiers), le **RU** (le troisième), le seuil et le verdict **Réussite / Échec**. Les **111** et **666** sont signalés.
+- La difficulté et le décalage en colonnes restent **modifiables** : le verdict se recalcule tout seul.
+- **Jet à l'insu d'un joueur** : Table → Fiches reçues → ouvre la fiche → **🎲 Jet secret**.
+- **🎲 Jet libre** (Table → Jets secrets) : pour un PNJ ou toute autre valeur de 1 à 6.
+- Le **journal des jets** (onglet Table) garde les 200 derniers ; touche une ligne pour revoir un jet.`,
+  },
+  {
     id: 'messages',
     titre: 'Les messages',
     icone: '✉️',
@@ -186,8 +207,11 @@ Dans la fiche reçue d'un joueur connecté : **✨ Accorder un pouvoir propre d'
 ## Tes propres personnages
 Sur tes personnages, tu peux choisir n'importe quel pouvoir propre et dépasser 0 PP après confirmation.
 
+## Jets secrets
+Voir la section « Les jets secrets » : les demandes des joueurs s'ouvrent toutes seules chez toi, et tu peux lancer un jet à l'insu d'un joueur depuis sa fiche reçue.
+
 ## À venir
-Création guidée selon tes règles, validation des fiches, jets secrets.`,
+Création guidée selon tes règles, validation des fiches.`,
   },
   {
     id: 'espace-mj',
@@ -261,6 +285,8 @@ export const GLOSSAIRE: { terme: string; def: string }[] = [
   { terme: 'Table', def: 'La partie en cours qui relie les appareils du MJ et des joueurs.' },
   { terme: 'Référentiel', def: 'Le fichier qui contient tout le contenu de jeu (supérieurs, pouvoirs, talents…).' },
   { terme: 'MJ', def: 'Maître du jeu.' },
+  { terme: 'Jet secret', def: 'Jet dont seul le MJ connaît le résultat ; les dés sont lancés sur son appareil.' },
+  { terme: '111 / 666', def: 'Triples 1 ou triples 6 au d666 : interventions divine ou diabolique, signalées dans les jets secrets.' },
   { terme: 'PNJ', def: 'Personnage non joueur, joué par le MJ.' },
   { terme: 'Phrase de passe', def: 'Mot de passe fait de plusieurs mots, plus facile à retenir et plus solide qu’un mot de passe court.' },
   { terme: 'Chiffrement', def: 'Transformation des données en charabia illisible sans la bonne phrase de passe.' },

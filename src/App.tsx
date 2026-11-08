@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { StatusPill, UpdatePrompt } from './components'
 import { BandeauAnnulation } from './BoutonPP'
+import { FenetreResultat } from './JetSecret'
 import { ConseilsDemarrage, EcranErreur } from './Erreurs'
 import { SECTION_PAR_ECRAN } from './guide/contenu'
 import Guide from './guide/Guide'
@@ -164,6 +165,7 @@ export default function App() {
         </Modal>
       )}
 
+      {s.profile.role === 'mj' && <FenetreResultat />}
       <BandeauAnnulation />
       <UpdatePrompt />
     </div>
