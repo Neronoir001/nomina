@@ -7,7 +7,7 @@ TYPES = {
     'Morts-vivants': 'Mort-vivant',
     'Familier animalier': 'Animal',
     'Familier humanoïde': 'Humain',
-    "Familier sous forme d'objet": 'Objet',
+    "Familier sous forme d'objet": 'Objet possédé',
 }
 GENRE = {'zombies': 'Zombie', 'squelettes': 'Squelette', 'goules': 'Goule'}
 NOMBRE = {'zombies': '3d6', 'squelettes': '2d6', 'goules': '1d6'}

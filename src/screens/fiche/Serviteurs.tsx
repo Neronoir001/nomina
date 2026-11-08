@@ -1,9 +1,9 @@
 import type { CaracKey } from '../../lib/pack'
 import { CARAC_ABBR } from '../../lib/pack'
 import type { Personnage, Serviteur } from '../../lib/personnage'
-import { nouveauServiteur } from '../../lib/personnage'
+import { nouveauServiteur, profilDe, TYPES_SERVITEUR } from '../../lib/personnage'
 import { useStore } from '../../lib/store'
-import { Area, Card, Empty, Field } from '../../ui'
+import { Area, Card, Empty, Field, ListeOuLibre } from '../../ui'
 import type { MajPerso } from './Fiche'
 import { LISTES } from './Suggestions'
 
@@ -11,7 +11,10 @@ export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: 
   const pack = useStore().pack
   const set = (id: string, f: (s: Serviteur) => Serviteur) => maj((x) => ({ ...x, serviteurs: x.serviteurs.map((s) => (s.id === id ? f(s) : s)) }))
   // Genres connus du référentiel, pour les suggestions selon le type choisi
-  const profils = (pack?.pouvoirs ?? []).filter((r) => r.serviteur && r.camp === p.camp).map((r) => r.serviteur!)
+  const profils = (pack?.pouvoirs ?? [])
+    .filter((r) => r.camp === p.camp)
+    .map((r) => profilDe(r))
+    .filter((x): x is NonNullable<typeof x> => !!x)
 
   return (
     <div className="stack">
@@ -25,8 +28,7 @@ export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: 
       )}
       {p.serviteurs.map((s, i) => {
         const pouvoir = s.pouvoirId ? p.pouvoirs.find((pw) => pw.id === s.pouvoirId) : undefined
-        const genres = [...new Set(profils.filter((pr) => !s.type || pr.type === s.type).map((pr) => pr.genre))]
-        const listeGenres = `dl-genres-${s.id}`
+        const genres = [...new Set(profils.filter((pr) => !s.type || pr.type === s.type).map((pr) => pr.genre))].sort((a, b) => a.localeCompare(b, 'fr'))
         const titre = [s.nom || s.genre || `Serviteur ${i + 1}`, s.nombre && s.nombre !== '1' ? `×${s.nombre}` : ''].filter(Boolean).join(' ')
         const sous = [s.type, s.genre && s.genre !== s.nom ? s.genre : ''].filter(Boolean).join(' – ')
         return (
@@ -51,16 +53,17 @@ export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: 
             <div className="stack">
               {pouvoir && <p className="muted small">Donné par le pouvoir « {pouvoir.nom} ».</p>}
               <div className="grid2">
-                <Field label="Type" list={LISTES.typesServiteur} value={s.type} onChange={(v) => set(s.id, (x) => ({ ...x, type: v }))} placeholder="Animal, Humain, Mort-vivant…" />
-                <label>
-                  Genre
-                  <input list={listeGenres} value={s.genre} onChange={(e) => set(s.id, (x) => ({ ...x, genre: e.target.value }))} placeholder="Rat, Majordome, Zombie…" />
-                  <datalist id={listeGenres}>
-                    {genres.map((g) => (
-                      <option key={g} value={g} />
-                    ))}
-                  </datalist>
-                </label>
+                <ListeOuLibre label="Type" options={[...TYPES_SERVITEUR]} value={s.type} onChange={(v) =>
+                    set(s.id, (x) => ({
+                      ...x,
+                      type: v,
+                      // Un genre de base de l'ancien type n'a plus de sens avec le nouveau
+                      genre: profils.some((pr) => pr.type === x.type && pr.genre === x.genre) && !profils.some((pr) => pr.type === v && pr.genre === x.genre) ? '' : x.genre,
+                    }))
+                  }
+                  placeholder="Type de serviteur"
+                />
+                <ListeOuLibre label="Genre" options={genres} value={s.genre} onChange={(v) => set(s.id, (x) => ({ ...x, genre: v }))} placeholder="Rat, Majordome, Zombie…" />
                 <Field label="Nom" value={s.nom} onChange={(v) => set(s.id, (x) => ({ ...x, nom: v }))} />
                 <Field label="Nombre" inputMode="numeric" value={s.nombre} onChange={(v) => set(s.id, (x) => ({ ...x, nombre: v }))} />
               </div>

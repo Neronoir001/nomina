@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { LimitationRef, PouvoirRef } from '../../lib/pack'
 import type { LimitationPerso, Personnage, PouvoirPerso } from '../../lib/personnage'
-import { nouveauPouvoir, serviteurDepuisProfil } from '../../lib/personnage'
+import { nouveauPouvoir, profilDe, serviteurDepuisProfil } from '../../lib/personnage'
 import { uid } from '../../lib/storage'
 import { norm } from '../../lib/texte'
 import { useStore } from '../../lib/store'
@@ -46,13 +46,21 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
   const ajouterPouvoir = (r?: PouvoirRef) => {
     const np = nouveauPouvoir()
     if (r) Object.assign(np, { refId: r.id, nom: r.nom, type: r.type ?? '', cout: r.cout ?? '', portee: r.portee ?? '', att: r.carac ?? '', def: r.defense ?? '', num: r.d666 ?? '' })
-    maj((x) => ({ ...x, pouvoirs: [...x.pouvoirs, np], serviteurs: r?.serviteur ? [...x.serviteurs, serviteurDepuisProfil(r.serviteur, np.id)] : x.serviteurs }))
-    if (r?.serviteur) annoncerServiteur(r)
+    const prof = profilDe(r)
+    maj((x) => ({ ...x, pouvoirs: [...x.pouvoirs, np], serviteurs: prof ? [...x.serviteurs, serviteurDepuisProfil(prof, np.id)] : x.serviteurs }))
+    if (r && prof) annoncerServiteur(r)
     setChoix(null)
   }
   const [info, setInfo] = useState<string | null>(null)
   const annoncerServiteur = (r: PouvoirRef) =>
-    setInfo(`« ${r.nom} » donne un serviteur : il a été créé dans l'onglet Serviteurs avec son profil${r.serviteur && r.serviteur.nombre !== '1' ? ` (nombre tiré au hasard : ${r.serviteur.nombre})` : ''}.`)
+    setInfo(`« ${r.nom} » donne un serviteur : il a été créé dans l'onglet Serviteurs avec son profil${profilDe(r)?.nombre !== '1' ? ` (nombre tiré au hasard : ${profilDe(r)?.nombre})` : ''}.`)
+  /** Crée le serviteur d'un pouvoir déjà présent sur la fiche. */
+  const creerServiteur = (pw: PouvoirPerso, r: PouvoirRef) => {
+    const prof = profilDe(r)
+    if (!prof) return
+    maj((x) => ({ ...x, serviteurs: [...x.serviteurs, serviteurDepuisProfil(prof, pw.id)] }))
+    annoncerServiteur(r)
+  }
   /** Retire un pouvoir, et propose de retirer aussi le serviteur qu'il avait donné. */
   const retirerPouvoir = (pw: PouvoirPerso) => {
     if (!confirm(`Retirer « ${pw.nom || 'ce pouvoir'} » ?`)) return
@@ -66,11 +74,15 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
   }
   /** Si le nom tapé correspond exactement à un pouvoir du référentiel, on complète les cases vides. */
   const nommerPouvoir = (pw: PouvoirPerso, nom: string) => {
-    const r = pack?.pouvoirs.find((x) => x.camp === p.camp && norm(x.nom) === norm(nom))
+    // Nom exact, ou au singulier / pluriel près (« Zombie » → « Zombies »)
+    const n = norm(nom)
+    const r =
+      pack?.pouvoirs.find((x) => x.camp === p.camp && norm(x.nom) === n) ??
+      (n.length > 2 ? pack?.pouvoirs.find((x) => x.camp === p.camp && (norm(x.nom) === `${n}s` || norm(x.nom) === n.replace(/s$/, ''))) : undefined)
     if (r && !autorise(r)) return setPouvoir(pw.id, { nom, refId: undefined })
     if (!r) return setPouvoir(pw.id, { nom, refId: pw.refId && pack?.pouvoirs.find((x) => x.id === pw.refId)?.nom === nom ? pw.refId : undefined })
-    if (r.serviteur && !p.serviteurs.some((sv) => sv.pouvoirId === pw.id)) {
-      const prof = r.serviteur
+    const prof = profilDe(r)
+    if (prof && !p.serviteurs.some((sv) => sv.pouvoirId === pw.id)) {
       maj((x) => ({ ...x, serviteurs: [...x.serviteurs, serviteurDepuisProfil(prof, pw.id)] }))
       annoncerServiteur(r)
     }
@@ -125,7 +137,16 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
                 <div className="row">
                   <input className="pouvoir-nom" list={LISTES.pouvoirs} value={pw.nom} onChange={(e) => nommerPouvoir(pw, e.target.value)} placeholder="Nom du pouvoir (suggestions en tapant)" aria-label="Nom du pouvoir" />
                   {ref?.superieur && <span className="tag tag-prince">{nomSup(ref.superieur)}</span>}
-                  {p.serviteurs.some((sv) => sv.pouvoirId === pw.id) && <span className="tag" title="Ce pouvoir a donné un serviteur (onglet Serviteurs)">👥 serviteur</span>}
+                  {p.serviteurs.some((sv) => sv.pouvoirId === pw.id) ? (
+                    <span className="tag" title="Ce pouvoir a donné un serviteur (onglet Serviteurs)">👥 serviteur</span>
+                  ) : (
+                    ref &&
+                    profilDe(ref) && (
+                      <button className="chip-btn" onClick={() => creerServiteur(pw, ref)} title="Ajouter dans l'onglet Serviteurs la créature donnée par ce pouvoir">
+                        ＋ Créer le serviteur
+                      </button>
+                    )
+                  )}
                   {pw.accordeParMJ && <span className="tag tag-mj" title="Exception accordée par le MJ">accordé par le MJ</span>}
                   {privilegies.has(norm(pw.nom)) && <span className="tag" title="Pouvoir privilégié de ton supérieur">privilégié</span>}
                   {ref && (

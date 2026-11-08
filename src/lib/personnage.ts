@@ -126,6 +126,60 @@ export function nouveauServiteur(): Serviteur {
   }
 }
 
+// ───────── Serviteurs donnés par un pouvoir ─────────
+
+export const TYPES_SERVITEUR = ['Animal', 'Humain', 'Mort-vivant', 'Objet possédé'] as const
+
+const TYPE_PAR_RUBRIQUE: Record<string, string> = {
+  'Morts-vivants': 'Mort-vivant',
+  'Familier animalier': 'Animal',
+  'Familier humanoïde': 'Humain',
+  "Familier sous forme d'objet": 'Objet possédé',
+}
+const GENRE_PAR_ID: Record<string, string> = { zombies: 'Zombie', squelettes: 'Squelette', goules: 'Goule' }
+const NOMBRE_PAR_ID: Record<string, string> = { zombies: '3d6', squelettes: '2d6', goules: '1d6' }
+const CLES_CARAC: Record<string, CaracKey | 'pp'> = { FO: 'fo', VO: 'vo', PE: 'pe', AG: 'ag', PR: 'pr', AP: 'ap', PP: 'pp' }
+
+/** « Esquive, Corps à corps (1) » → niveaux ; un élément sans niveau prend celui qui le suit. */
+function listeNiveaux(texte: string): { nom: string; niveau: number | string }[] {
+  const out: { nom: string; niveau: number | string }[] = []
+  let attente: string[] = []
+  const maj = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
+  for (const it of texte.split(',').map((t) => t.trim()).filter(Boolean)) {
+    const m = it.match(/^(.*?)\s*\((\d+)\)$/)
+    if (m) {
+      for (const a of attente) out.push({ nom: maj(a), niveau: Number(m[2]) })
+      attente = []
+      out.push({ nom: maj(m[1]), niveau: Number(m[2]) })
+    } else attente.push(it)
+  }
+  for (const a of attente) out.push({ nom: maj(a), niveau: '' })
+  return out
+}
+
+/**
+ * Profil du serviteur donné par un pouvoir : celui du référentiel s'il existe,
+ * sinon lu dans la phrase « Profil : … » du résumé (référentiels plus anciens).
+ */
+export function profilDe(ref: { id: string; nom: string; rubrique?: string; resume?: string; serviteur?: ProfilServiteur } | undefined): ProfilServiteur | undefined {
+  if (!ref) return undefined
+  if (ref.serviteur) return { ...ref.serviteur, type: ref.serviteur.type === 'Objet' ? 'Objet possédé' : ref.serviteur.type }
+  const type = ref.rubrique ? TYPE_PAR_RUBRIQUE[ref.rubrique] : undefined
+  const m = ref.resume?.match(/Profil[^:]*:\s*(.*)$/)
+  if (!type || !m) return undefined
+  const parties = m[1].split(' ; ').map((x) => x.trim().replace(/\.$/, ''))
+  const caracs: ProfilServiteur['caracs'] = {}
+  for (const [, k, v] of parties[0].matchAll(/\b(FO|VO|PE|AG|PR|AP|PP)\s+(\d+)/g)) caracs[CLES_CARAC[k]] = Number(v)
+  return {
+    type,
+    genre: GENRE_PAR_ID[ref.id] ?? ref.nom,
+    nombre: NOMBRE_PAR_ID[ref.id] ?? '1',
+    caracs,
+    talents: parties[1] ? listeNiveaux(parties[1]) : [],
+    pouvoirs: parties[2] ? listeNiveaux(parties[2]) : [],
+  }
+}
+
 /** Lance des dés écrits « 3d6 » (ou renvoie le nombre tel quel). */
 export function lancerDes(expr: string): { total: number; detail: string } {
   const m = expr.trim().match(/^(\d+)d(\d+)$/i)
@@ -184,6 +238,7 @@ export function normaliser(entree: Partial<Personnage> | null | undefined): Pers
       return {
         ...b,
         ...s,
+        type: s.type === 'Objet' || s.type === 'Possédé' ? 'Objet possédé' : (s.type ?? ''),
         caracs: { ...b.caracs, ...s.caracs },
         talents: liste(s.talents),
         pouvoirs: liste(s.pouvoirs).map((p) => ({ ...p, niveau: p.niveau ?? '' })),

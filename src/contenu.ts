@@ -44,6 +44,14 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.5.1',
+    date: '8 novembre 2026',
+    points: [
+      'Le serviteur est créé même avec un ancien référentiel, et « Zombie » au singulier est reconnu. Pour un pouvoir déjà sur la fiche, un bouton « ＋ Créer le serviteur » apparaît.',
+      'Serviteurs : le type et le genre se choisissent dans des menus (Rat, Chat, Serpent… pour un animal), avec « Autre » pour une saisie libre. « Possédé » devient « Objet possédé ».',
+    ],
+  },
+  {
     version: '0.5.0',
     date: '8 novembre 2026',
     points: [

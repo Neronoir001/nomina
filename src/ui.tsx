@@ -207,6 +207,38 @@ export function Choix(p: {
   )
 }
 
+/** Menu déroulant d'une liste de base, avec « Autre » pour une saisie libre. */
+export function ListeOuLibre(p: { label: string; options: string[]; value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const horsListe = !!p.value && !p.options.includes(p.value)
+  const [libre, setLibre] = useState(horsListe)
+  const enLibre = libre || horsListe
+  return (
+    <label>
+      {p.label}
+      <select
+        value={enLibre ? '__autre' : p.value}
+        onChange={(e) => {
+          if (e.target.value === '__autre') {
+            setLibre(true)
+          } else {
+            setLibre(false)
+            p.onChange(e.target.value)
+          }
+        }}
+      >
+        <option value="">— Choisir —</option>
+        {p.options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+        <option value="__autre">Autre (saisie libre)…</option>
+      </select>
+      {enLibre && <input value={p.value} onChange={(e) => p.onChange(e.target.value)} placeholder={p.placeholder ?? 'Saisir…'} aria-label={`${p.label} (saisie libre)`} autoFocus={libre && !horsListe} />}
+    </label>
+  )
+}
+
 export function Empty(p: { children: ReactNode }) {
   return <p className="muted empty">{p.children}</p>
 }
