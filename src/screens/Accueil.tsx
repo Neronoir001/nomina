@@ -11,6 +11,7 @@ import type { Personnage } from '../lib/personnage'
 import { nomAffiche, nouveauPersonnage } from '../lib/personnage'
 import { creerPerso, heure, listePersos, majPerso, setState, useStore } from '../lib/store'
 import { Card, FilePick, Stepper } from '../ui'
+import { BoutonPP } from '../BoutonPP'
 
 export type Onglet = 'accueil' | 'fiche' | 'referentiel' | 'table' | 'messages' | 'reglages'
 
@@ -164,7 +165,18 @@ function CartePerso({ p, actif, ouvrir }: { p: Personnage; actif: boolean; ouvri
           <Stepper label={`PP (max ${p.pp.max})`} value={p.pp.actuel} min={0} onChange={(v) => majPerso(p.id, (x) => ({ ...x, pp: { ...x.pp, actuel: v } }))} />
           <Stepper label={`PV (max ${p.blessures.max})`} value={p.blessures.actuel} min={0} onChange={(v) => majPerso(p.id, (x) => ({ ...x, blessures: { ...x.blessures, actuel: v } }))} />
         </div>
-      ) : (
+      ) : null}
+      {actif && p.pouvoirs.length > 0 ? (
+        <ul className="plain pouvoirs-rapides">
+          {p.pouvoirs.map((pw) => (
+            <li key={pw.id}>
+              <span className="tronque">{pw.nom || 'Pouvoir'}</span>
+              <BoutonPP persoId={p.id} pouvoir={pw.nom || 'Pouvoir'} cout={pw.cout} ppActuels={p.pp.actuel} compact />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {actif ? null : (
         <p className="muted small carte-perso-resume">
           PP {p.pp.actuel}/{p.pp.max} · PV {p.blessures.actuel}/{p.blessures.max}
         </p>

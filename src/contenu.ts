@@ -44,6 +44,15 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.6.0',
+    date: '8 novembre 2026',
+    points: [
+      'Bouton ⚡ sur chaque pouvoir (fiche, serviteurs et accueil) : un toucher dépense ses PP. Pour un coût par seconde, par minute ou par cible, une petite fenêtre demande la durée ou le nombre de cibles.',
+      'Impossible de descendre sous 0 PP (le MJ peut passer outre sur ses propres personnages). Un bandeau « Annuler » reste 8 secondes après chaque dépense.',
+      'Journal des PP dépensés dans l’onglet Pouvoirs. Les compteurs PP actuels et max restent modifiables à la main avec − et +.',
+    ],
+  },
+  {
     version: '0.5.3',
     date: '8 novembre 2026',
     points: [

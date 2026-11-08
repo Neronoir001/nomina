@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { clear, createStore, getMany, set as idbSet } from 'idb-keyval'
 import type { Pack } from './pack'
+import type { Annulation } from './pp'
 import type { Personnage } from './personnage'
 import { depuisFicheProto, nomAffiche, normaliser, nouveauPersonnage } from './personnage'
 import type { ChatMessage, Contact, FicheRecue, Groupe, LogLine, Peer, Profile, RelayKind, Signalement, TableInfo } from './types'
@@ -38,6 +39,8 @@ export type State = {
   nouveautesVues: string | null
   /** Annonce à afficher (ex. pouvoir accordé par le MJ) */
   annonce: { titre: string; texte: string } | null
+  /** Dernière dépense de PP, annulable quelques secondes */
+  annulation: Annulation | null
   /** Message d'erreur si le démarrage a échoué (données non chargées) */
   erreurDemarrage: string | null
   logs: LogLine[]
@@ -76,6 +79,7 @@ let state: State = {
   nouveautesVues: null,
   erreurDemarrage: null,
   annonce: null,
+  annulation: null,
   logs: [],
 }
 

@@ -8,6 +8,8 @@ import { useStore } from '../../lib/store'
 import { Area, Card, Empty, Info, Modal } from '../../ui'
 import { FichePouvoir } from '../referentiel/Details'
 import type { MajPerso } from './Fiche'
+import { BoutonPP } from '../../BoutonPP'
+import { Stepper } from '../../ui'
 import { LISTES } from './Suggestions'
 
 const COLS: { k: keyof PouvoirPerso; label: string; list?: string }[] = [
@@ -123,6 +125,14 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
           </>
         }
       >
+        <Stepper
+          label={`PP actuels (max ${p.pp.max})`}
+          value={p.pp.actuel}
+          min={0}
+          onChange={(v) => maj((x) => ({ ...x, pp: { ...x.pp, actuel: v } }))}
+          className="pp-pouvoirs"
+        />
+        <p className="muted small">Touche ⚡ sur un pouvoir pour l'utiliser : ses PP sont retirés tout seuls (annulable quelques secondes).</p>
         {p.pouvoirs.length === 0 && <Empty>Aucun pouvoir pour l'instant.</Empty>}
         {info && (
           <p className="note-ok" onClick={() => setInfo(null)}>
@@ -154,6 +164,7 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
                       <FichePouvoir r={ref} />
                     </Info>
                   )}
+                  <BoutonPP persoId={p.id} pouvoir={pw.nom || 'Pouvoir'} cout={pw.cout} ppActuels={p.pp.actuel} />
                   <button
                     className="icon-btn"
                     title="Retirer ce pouvoir"
@@ -218,6 +229,8 @@ export default function Pouvoirs({ perso: p, maj }: { perso: Personnage; maj: Ma
         })}
       </Card>
 
+      <JournalPP perso={p} maj={maj} />
+
       <Card title="Notes">
         <Area label="Notes sur les pouvoirs" value={p.notes.pouvoirs} onChange={(v) => maj((x) => ({ ...x, notes: { ...x.notes, pouvoirs: v } }))} />
       </Card>
@@ -275,5 +288,31 @@ export function Chooser<T extends { id: string; nom: string; resume?: string }>(
         {list.length === 0 && <li className="muted">Aucun résultat.</li>}
       </ul>
     </Modal>
+  )
+}
+
+/** Journal des PP dépensés (personnage et serviteurs). */
+function JournalPP({ perso: p, maj }: { perso: Personnage; maj: MajPerso }) {
+  const lignes = [...p.journalPP].reverse()
+  if (lignes.length === 0) return null
+  const total = lignes.reduce((a, d) => a + d.montant, 0)
+  return (
+    <Card
+      title={`Journal des PP (${total} dépensés)`}
+      actions={
+        <button className="link small" onClick={() => confirm('Vider le journal des dépenses de PP ?') && maj((x) => ({ ...x, journalPP: [] }))}>
+          Vider
+        </button>
+      }
+    >
+      <ul className="plain small journal-pp">
+        {lignes.slice(0, 30).map((d) => (
+          <li key={d.id}>
+            <span className="muted">{new Date(d.at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span> {d.pouvoir}
+            {d.serviteurNom ? <span className="muted"> ({d.serviteurNom})</span> : null} <b>−{d.montant} PP</b>
+          </li>
+        ))}
+      </ul>
+    </Card>
   )
 }

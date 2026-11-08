@@ -8,6 +8,7 @@ import { useStore } from '../../lib/store'
 import { Area, Card, Empty, Field, Info, ListeOuLibre, Stepper } from '../../ui'
 import { FichePouvoir } from '../referentiel/Details'
 import type { MajPerso } from './Fiche'
+import { BoutonPP } from '../../BoutonPP'
 import { LISTES } from './Suggestions'
 
 export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: MajPerso }) {
@@ -156,6 +157,7 @@ export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: 
                     <input className="mini" value={pw.niveau} placeholder="Niv" aria-label="Niveau" onChange={(e) => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.map((y, k) => (k === j ? { ...y, niveau: e.target.value } : y)) }))} />
                     <input className="mini" value={pw.pp} placeholder="PP" aria-label="Coût en PP" title="Coût en PP" onChange={(e) => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.map((y, k) => (k === j ? { ...y, pp: e.target.value } : y)) }))} />
                     <input className="grow" value={pw.notes} placeholder="Notes" onChange={(e) => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.map((y, k) => (k === j ? { ...y, notes: e.target.value } : y)) }))} />
+                    <BoutonPP persoId={p.id} pouvoir={pw.nom || 'Pouvoir'} cout={pw.pp} ppActuels={s.ppActuel} serviteurId={s.id} compact />
                     <button className="icon-btn" onClick={() => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.filter((_, k) => k !== j) }))} title="Retirer">
                       ✕
                     </button>

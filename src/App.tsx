@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { StatusPill, UpdatePrompt } from './components'
+import { BandeauAnnulation } from './BoutonPP'
 import { ConseilsDemarrage, EcranErreur } from './Erreurs'
 import { parseJoin } from './lib/codes'
 import { roleLabel } from './lib/p2p'
@@ -131,6 +132,7 @@ export default function App() {
         </Modal>
       )}
 
+      <BandeauAnnulation />
       <UpdatePrompt />
     </div>
   )

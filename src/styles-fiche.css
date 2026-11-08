@@ -164,5 +164,16 @@ input { text-overflow: ellipsis; }
 .serv-row .info-btn, .info-vide { width: 1.5rem; flex: none; text-align: center; padding: 0; }
 .serviteur-titre { display: flex; flex-direction: column; min-width: 0; }
 .card-head h3 { min-width: 0; }
+/* Bouton « ⚡ » : utiliser un pouvoir et dépenser ses PP */
+.btn-pp { flex: none; min-height: 40px; min-width: 56px; padding: .3rem .6rem; border-radius: 10px; border: 1px solid var(--gold); background: rgba(227, 192, 106, .12); color: var(--gold-soft); font: inherit; font-weight: 700; font-size: .9rem; cursor: pointer; white-space: nowrap; }
+.btn-pp:hover:not(:disabled) { background: rgba(227, 192, 106, .25); }
+.btn-pp.compact { min-height: 34px; min-width: 48px; padding: .2rem .45rem; font-size: .82rem; }
+.btn-pp.insuffisant { border-color: var(--red); color: #ff9d97; background: rgba(195, 49, 42, .12); }
+.btn-pp:disabled { opacity: .55; cursor: not-allowed; }
+.pp-pouvoirs { margin-bottom: .4rem; max-width: 260px; }
+.pouvoirs-rapides { padding: 0 .8rem .8rem; gap: .35rem; }
+.pouvoirs-rapides li { display: flex; align-items: center; gap: .5rem; justify-content: space-between; border-top: 1px solid var(--border); padding-top: .35rem; }
+.journal-pp li { border-bottom: 1px solid var(--border); padding: .25rem 0; }
+.toast-pp { top: auto; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px); }
 .tag-mj { color: #1a1208; background: var(--gold); text-transform: none; letter-spacing: 0; }
 .accorder { margin-top: .6rem; }

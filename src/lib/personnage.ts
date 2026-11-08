@@ -86,6 +86,18 @@ export type Personnage = {
   serviteurs: Serviteur[]
   equipement: string
   notes: Record<SectionNotes, string>
+  /** Journal des PP dépensés (les plus récents à la fin) */
+  journalPP: DepensePP[]
+}
+
+export type DepensePP = {
+  id: string
+  at: number
+  pouvoir: string
+  montant: number
+  /** Serviteur qui a dépensé, sinon le personnage */
+  serviteurId?: string
+  serviteurNom?: string
 }
 
 export function nouveauPersonnage(camp: Camp = 'INS'): Personnage {
@@ -114,6 +126,7 @@ export function nouveauPersonnage(camp: Camp = 'INS'): Personnage {
     serviteurs: [],
     equipement: '',
     notes: { identite: '', talents: '', pouvoirs: '', superieur: '', serviteurs: '', general: '' },
+    journalPP: [],
   }
 }
 
@@ -237,6 +250,7 @@ export function normaliser(entree: Partial<Personnage> | null | undefined): Pers
     limitations: liste(x.limitations),
     pouvoirsGrade: liste(x.pouvoirsGrade),
     recuperation: liste(x.recuperation),
+    journalPP: liste(x.journalPP),
     serviteurs: liste(x.serviteurs).map((s) => {
       const b = nouveauServiteur()
       return {
