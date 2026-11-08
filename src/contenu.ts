@@ -44,6 +44,11 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.8.1',
+    date: '8 novembre 2026',
+    points: ['Correction : l’onglet « MJ » 🎭 était caché sous le bas de l’écran. Il apparaît maintenant à droite de « Messages » (avec le rôle Maître du jeu).'],
+  },
+  {
     version: '0.8.0',
     date: '8 novembre 2026',
     points: [

@@ -1,5 +1,6 @@
 /* ═════════ Étape 1 : fiche, référentiel, réglages ═════════ */
-.tabbar { grid-template-columns: repeat(5, 1fr); }
+.tab > span:not(.badge):not(.tab-icon) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0; }
+.tabbar:has(> :nth-child(6)) .tab { font-size: .64rem; }
 .tab { font-size: .7rem; }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: .6rem; flex-wrap: wrap; margin-bottom: .6rem; }
 .card-head h3 { margin: 0; }
