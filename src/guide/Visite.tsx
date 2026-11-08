@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from 'react'
+import { useStore } from '../lib/store'
 
-type Etape = { cible?: string; titre: string; texte: string }
+type Etape = { cible?: string; titre: string; texte: string; mj?: boolean }
 
 const ETAPES: Etape[] = [
   {
@@ -12,6 +13,7 @@ const ETAPES: Etape[] = [
   { cible: 'referentiel', titre: 'Référentiel', texte: 'Princes, pouvoirs, talents et limitations, avec recherche. Ton MJ te l’envoie quand tu rejoins sa Table.' },
   { cible: 'table', titre: 'Table', texte: 'Pour rejoindre la partie du MJ en scannant son QR code. Ta fiche lui est alors envoyée automatiquement.' },
   { cible: 'messages', titre: 'Messages', texte: 'Des messages privés, à deux ou en groupe, que seuls les destinataires reçoivent.' },
+  { cible: 'mj', mj: true, titre: 'Espace MJ', texte: 'Ton espace secret, chiffré par une phrase de passe : notes de campagne, séances, PNJ et règles maison.' },
   { cible: 'aide', titre: 'Aide', texte: 'Ce bouton ouvre le guide directement à la page de l’écran affiché.' },
   { cible: 'reglages', titre: 'Réglages', texte: 'Sauvegardes, référentiel, mises à jour et diagnostic de connexion.' },
   { titre: 'À toi de jouer !', texte: 'Un conseil : pense à sauvegarder régulièrement tes personnages (⚙️ → Sauvegardes). Bonne partie !' },
@@ -21,10 +23,12 @@ type Rect = { top: number; left: number; width: number; height: number }
 
 /** Visite guidée : met en lumière chaque zone de l'écran, une étape après l'autre. */
 export default function Visite({ onFin }: { onFin: () => void }) {
+  const estMj = useStore().profile?.role === 'mj'
+  const [etapes] = useState(() => ETAPES.filter((e) => !e.mj || estMj))
   const [i, setI] = useState(0)
   const [rect, setRect] = useState<Rect | null>(null)
-  const etape = ETAPES[i]
-  const derniere = i === ETAPES.length - 1
+  const etape = etapes[i]
+  const derniere = i === etapes.length - 1
 
   useLayoutEffect(() => {
     const mesurer = () => {
@@ -46,12 +50,12 @@ export default function Visite({ onFin }: { onFin: () => void }) {
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onFin()
-      if (e.key === 'ArrowRight') setI((x) => Math.min(x + 1, ETAPES.length - 1))
+      if (e.key === 'ArrowRight') setI((x) => Math.min(x + 1, etapes.length - 1))
       if (e.key === 'ArrowLeft') setI((x) => Math.max(x - 1, 0))
     }
     window.addEventListener('keydown', k)
     return () => window.removeEventListener('keydown', k)
-  }, [onFin])
+  }, [onFin, etapes])
 
   // La bulle se place du côté où il y a le plus de place.
   const enHaut = rect && rect.top + rect.height / 2 > window.innerHeight / 2
@@ -66,7 +70,7 @@ export default function Visite({ onFin }: { onFin: () => void }) {
       {rect ? <div className="visite-spot" style={rect} /> : <div className="visite-fond" />}
       <div className="visite-bulle" style={styleBulle}>
         <div className="muted small">
-          {i + 1} / {ETAPES.length}
+          {i + 1} / {etapes.length}
         </div>
         <h3>{etape.titre}</h3>
         <p>{etape.texte}</p>

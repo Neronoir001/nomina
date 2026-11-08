@@ -9,7 +9,7 @@ import { isPack } from './pack'
 import type { Personnage } from './personnage'
 import { nomAffiche, normaliser, nouveauPouvoir } from './personnage'
 import { majPerso, persoActif } from './store'
-import type { ChatMessage, Groupe, Peer, Profile, RelayKind, Role, TableInfo } from './types'
+import type { ChatMessage, Groupe, Peer, Profile, ReglesMaison, RelayKind, Role, TableInfo } from './types'
 import { RELAYS } from './types'
 
 const APP_ID = 'nomina-insmv'
@@ -29,6 +29,7 @@ type Actions = {
   grp: MessageAction<JsonValue>
   grpQuit: MessageAction<JsonValue>
   accord: MessageAction<JsonValue>
+  regles: MessageAction<JsonValue>
 }
 
 let room: Room | null = null
@@ -163,6 +164,20 @@ function makeActions(r: Room): Actions {
     grp: r.makeAction<JsonValue>('grp'),
     grpQuit: r.makeAction<JsonValue>('grp-quit'),
     accord: r.makeAction<JsonValue>('accord'),
+    regles: r.makeAction<JsonValue>('regles'),
+  }
+
+  // Règles maison publiées par le MJ
+  a.regles.onMessage = (d, { peerId }) => {
+    if (getState().peers[peerId]?.role !== 'mj') return
+    const rm = d as unknown as ReglesMaison
+    if (!rm || !Array.isArray(rm.regles)) return
+    const avant = getState().reglesMaison
+    if (avant && avant.at === rm.at) return
+    setState({ reglesMaison: rm })
+    if (rm.regles.length)
+      setState({ annonce: { titre: 'Règles maison', texte: `${rm.de} a publié ${rm.regles.length} règle(s) maison. Tu les trouveras dans Référentiel → Règles.` } })
+    log(`Règles maison reçues de ${rm.de} (${rm.regles.length}).`, 'ok')
   }
 
   a.hello.onMessage = (d, { peerId }) => onHello(d as unknown as Hello, peerId)
@@ -301,6 +316,19 @@ function onHello(h: Hello, peerId: string): void {
   if (me().role === 'joueur' && h.role === 'mj') void sendSheet([peerId])
   // Le MJ envoie automatiquement son référentiel aux joueurs
   if (me().role === 'mj' && h.role === 'joueur' && getState().pack) void sendReferentiel([peerId])
+  // … et ses règles maison
+  const rm = getState().reglesMaison
+  if (me().role === 'mj' && h.role === 'joueur' && rm) void A?.regles.send(rm as unknown as JsonValue, { target: peerId })
+}
+
+/** MJ : publie les règles maison à tous les joueurs (connectés maintenant, ou à leur prochaine connexion). */
+export async function publierRegles(regles: ReglesMaison['regles']): Promise<number> {
+  const rm: ReglesMaison = { regles, at: Date.now(), de: me().name }
+  setState({ reglesMaison: rm })
+  const cibles = joueurPeerIds()
+  if (A && cibles.length) await A.regles.send(rm as unknown as JsonValue, { target: cibles })
+  log(`Règles maison publiées (${regles.length}), envoyées à ${cibles.length} joueur(s) connecté(s).`, 'ok')
+  return cibles.length
 }
 
 // ───────────────────────── Messagerie ─────────────────────────

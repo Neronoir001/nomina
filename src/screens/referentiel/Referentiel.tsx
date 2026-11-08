@@ -42,6 +42,7 @@ export default function Referentiel() {
             {msg && <p className="note-ok">{msg}</p>}
           </div>
         </Card>
+        <ReglesMaisonCarte />
       </div>
     )
   }
@@ -77,15 +78,37 @@ export default function Referentiel() {
       {onglet === 'talents' && <ListeTalents items={pack.talents.filter((x) => match(x.nom, x.resume))} />}
       {onglet === 'limitations' && <ListeLim items={lims.filter((x) => match(x.nom, x.resume))} />}
       {onglet === 'regles' && (
-        <Card title="Table de potentiel de réussite (table UM)">
-          {pack.regles?.tableUM ? <TableUM table={pack.regles.tableUM} /> : <Empty>Pas encore dans ce référentiel.</Empty>}
-        </Card>
+        <>
+          <ReglesMaisonCarte />
+          <Card title="Table de potentiel de réussite (table UM)">
+            {pack.regles?.tableUM ? <TableUM table={pack.regles.tableUM} /> : <Empty>Pas encore dans ce référentiel.</Empty>}
+          </Card>
+        </>
       )}
 
       <p className="muted small center">
         Référentiel « {pack.titre} », version {pack.version} ({new Date(pack.date).toLocaleDateString('fr-FR')}).
       </p>
     </div>
+  )
+}
+
+/** Règles maison publiées par le MJ (reçues à la Table). */
+function ReglesMaisonCarte() {
+  const rm = useStore().reglesMaison
+  if (!rm || rm.regles.length === 0) return null
+  return (
+    <Card title="📜 Règles maison" className="regles-maison">
+      <p className="muted small">
+        Publiées par {rm.de} le {new Date(rm.at).toLocaleDateString('fr-FR')}. Elles remplacent les règles du livre sur ces points.
+      </p>
+      {rm.regles.map((r) => (
+        <div key={r.id} className="regle-maison">
+          {r.titre && <b>{r.titre}</b>}
+          <p className="pre">{r.texte}</p>
+        </div>
+      ))}
+    </Card>
   )
 }
 

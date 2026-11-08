@@ -4,7 +4,7 @@ import type { Pack } from './pack'
 import type { Annulation } from './pp'
 import type { Personnage } from './personnage'
 import { depuisFicheProto, nomAffiche, normaliser, nouveauPersonnage } from './personnage'
-import type { ChatMessage, Contact, FicheRecue, Groupe, LogLine, Peer, Profile, RelayKind, Signalement, TableInfo } from './types'
+import type { ChatMessage, Contact, FicheRecue, Groupe, LogLine, Peer, Profile, ReglesMaison, RelayKind, Signalement, TableInfo } from './types'
 
 export type Status = 'deconnecte' | 'connexion' | 'connecte' | 'erreur'
 
@@ -39,6 +39,8 @@ export type State = {
   nouveautesVues: string | null
   /** Visite guidée déjà vue (ou passée) */
   visiteFaite: boolean
+  /** Règles maison publiées par le MJ (visibles de tous les joueurs) */
+  reglesMaison: ReglesMaison | null
   /** Annonce à afficher (ex. pouvoir accordé par le MJ) */
   annonce: { titre: string; texte: string } | null
   /** Dernière dépense de PP, annulable quelques secondes */
@@ -50,7 +52,7 @@ export type State = {
 
 const PERSISTED = [
   'profile', 'personnages', 'actifId', 'pack', 'signalements', 'table', 'contacts', 'messages', 'unread',
-  'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues', 'visiteFaite',
+  'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues', 'visiteFaite', 'reglesMaison',
   'groupes', 'groupesQuittes',
 ] as const
 type PersistedKey = (typeof PERSISTED)[number]
@@ -80,6 +82,7 @@ let state: State = {
   derniereSauvegarde: null,
   nouveautesVues: null,
   visiteFaite: false,
+  reglesMaison: null,
   erreurDemarrage: null,
   annonce: null,
   annulation: null,

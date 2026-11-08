@@ -13,7 +13,7 @@ import { creerPerso, heure, listePersos, majPerso, setState, useStore } from '..
 import { Card, FilePick, Stepper } from '../ui'
 import { BoutonPP } from '../BoutonPP'
 
-export type Onglet = 'accueil' | 'fiche' | 'referentiel' | 'table' | 'messages' | 'reglages'
+export type Onglet = 'accueil' | 'fiche' | 'referentiel' | 'table' | 'messages' | 'mj' | 'reglages'
 
 const JOUR = 24 * 3600 * 1000
 

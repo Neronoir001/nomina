@@ -82,6 +82,8 @@ export async function importerFichier(file: File): Promise<string> {
   }
   const d = data as { format?: string }
 
+  if (d.format === 'nomina-coffre') return "C'est un fichier de campagne MJ (chiffré) : ouvre-le depuis l'onglet MJ → « Reprendre une campagne »."
+
   if (isPack(data)) {
     setState({ pack: data })
     log(`Référentiel « ${data.titre} » (version ${data.version}) installé.`, 'ok')

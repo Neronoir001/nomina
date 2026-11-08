@@ -44,6 +44,15 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.8.0',
+    date: '8 novembre 2026',
+    points: [
+      'MJ : nouvel onglet « MJ » 🎭, un espace secret chiffré par une phrase de passe, avec les notes de campagne, le journal des séances, les PNJ et les règles maison.',
+      'MJ : changement de phrase de passe et passation de la campagne à un autre MJ, qui choisit aussitôt sa propre phrase.',
+      'Joueurs : les règles maison publiées par le MJ apparaissent dans Référentiel → Règles.',
+    ],
+  },
+  {
     version: '0.7.0',
     date: '8 novembre 2026',
     points: [

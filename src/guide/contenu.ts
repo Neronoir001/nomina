@@ -116,7 +116,8 @@ Les compteurs **PP actuels** et **PP max** restent toujours modifiables à la ma
 - La **recherche** fonctionne sur les noms et les descriptions (et le nom du prince pour ses pouvoirs propres).
 - Touche un élément pour l'ouvrir. **ⓘ** affiche les mêmes informations depuis la fiche.
 - Les descriptions sont des **résumés** : la page du livre est indiquée pour le texte complet.
-- **⚑ Signaler une erreur** : note ce qui te semble faux. Tes signalements se retrouvent dans ⚙️ → Signalements.`,
+- **⚑ Signaler une erreur** : note ce qui te semble faux. Tes signalements se retrouvent dans ⚙️ → Signalements.
+- **Règles maison** : celles que ton MJ a publiées apparaissent en tête de l'onglet **Règles**. Elles remplacent le livre sur les points concernés.`,
   },
   {
     id: 'table',
@@ -183,10 +184,39 @@ Dans la fiche reçue d'un joueur connecté : **✨ Accorder un pouvoir propre d'
 - ⚙️ → **Partager le fichier du référentiel** pour l'envoyer autrement (message, e-mail…).
 
 ## Tes propres personnages
-Sur tes personnages et PNJ, tu peux choisir n'importe quel pouvoir propre et dépasser 0 PP après confirmation.
+Sur tes personnages, tu peux choisir n'importe quel pouvoir propre et dépasser 0 PP après confirmation.
 
 ## À venir
-Un espace MJ protégé par mot de passe : règles maison, PNJ, notes de campagne, jets secrets.`,
+Création guidée selon tes règles, validation des fiches, jets secrets.`,
+  },
+  {
+    id: 'espace-mj',
+    titre: "L'espace MJ",
+    icone: '🔒',
+    public: 'mj',
+    corps: `L'onglet **MJ** (visible seulement avec le rôle Maître du jeu) rassemble tes secrets de campagne. Tout y est **chiffré** avec ta phrase de passe : sans elle, les données sont illisibles, même pour quelqu'un qui aurait ton appareil.
+
+## Créer l'espace
+1. Onglet **MJ** → **Créer mon espace MJ**.
+2. Nomina propose une **phrase de passe** facile à retenir (4 mots et un nombre). **🔄 Une autre** en tire une nouvelle, **Choisir la mienne** permet d'en taper une (12 caractères minimum).
+3. **Note-la** (papier ou gestionnaire de mots de passe), coche la case, puis valide.
+
+**Important** : une phrase oubliée ne peut pas être retrouvée. Exporte régulièrement ta campagne (onglet 🔑).
+
+## Ce que tu y ranges
+- **Campagne** : nom, notes de scénario, aides de jeu.
+- **Séances** : le journal de chaque partie, daté.
+- **PNJ** : humains, démons, anges, serviteurs… avec caractéristiques, PP et PV réglables en partie, talents, pouvoirs et notes. **📑 Dupliquer** pour créer vite une bande de sbires, **♻️** pour remettre PP et PV au maximum.
+- **Règles** : tes règles maison. Coche **Visible des joueurs** puis touche **Publier** : elles leur sont envoyées, et renvoyées à chaque connexion à ta Table. Les autres restent secrètes.
+
+## Verrouillage
+- **🔒 Verrouiller** ferme l'espace ; il faudra la phrase pour le rouvrir.
+- Il se verrouille aussi tout seul quand l'appli reste plus de **10 minutes** en arrière-plan.
+- Tout est enregistré (chiffré) automatiquement à chaque modification.
+
+## Changer de phrase ou passer la main
+- Onglet **🔑** → **Changer la phrase de passe** : tout est rechiffré, l'ancienne ne marche plus sur cet appareil.
+- **Passation** : exporte la campagne (le fichier reste chiffré), envoie-le au nouveau MJ et donne-lui la phrase de vive voix. Il l'ouvre avec **Reprendre une campagne**, puis Nomina lui fait choisir **sa propre** phrase. L'ancien MJ garde ce qu'il avait déjà, mais ne peut pas lire ce qui sera ajouté ensuite.`,
   },
   {
     id: 'astuces',
@@ -210,6 +240,8 @@ export const FAQ: { q: string; r: string }[] = [
   { q: 'Un serviteur ne s’est pas créé.', r: "Dans l'onglet Pouvoirs, la ligne du pouvoir affiche « ＋ Créer le serviteur » : touche-le." },
   { q: 'J’ai dépensé des PP par erreur.', r: "Touche « Annuler » dans le bandeau qui reste 8 secondes. Passé ce délai, corrige le compteur PP actuels avec +." },
   { q: 'Le MJ peut-il lire mes messages ?', r: "Non : un message ne va qu'aux appareils de ses destinataires. Un groupe sans le MJ lui est invisible." },
+  { q: 'J’ai oublié la phrase de passe de l’espace MJ.', r: "Elle ne peut pas être retrouvée : c'est ce qui protège tes secrets. Si tu as exporté la campagne, réimporte le fichier avec la phrase qui allait avec. Sinon, « Phrase oubliée ? » permet d'effacer l'espace MJ pour en recréer un vide." },
+  { q: 'Comment transmettre ma campagne à un autre MJ ?', r: "Onglet MJ → 🔑 → « Exporter la campagne ». Envoie le fichier, donne la phrase de passe de vive voix ; le nouveau MJ l'ouvre avec « Reprendre une campagne » et choisit sa propre phrase." },
   { q: 'Une information du référentiel est fausse.', r: "Ouvre l'élément dans le Référentiel et touche « ⚑ Signaler une erreur » ; envoie ensuite tes signalements depuis ⚙️ → Signalements." },
 ]
 
@@ -229,6 +261,11 @@ export const GLOSSAIRE: { terme: string; def: string }[] = [
   { terme: 'Table', def: 'La partie en cours qui relie les appareils du MJ et des joueurs.' },
   { terme: 'Référentiel', def: 'Le fichier qui contient tout le contenu de jeu (supérieurs, pouvoirs, talents…).' },
   { terme: 'MJ', def: 'Maître du jeu.' },
+  { terme: 'PNJ', def: 'Personnage non joueur, joué par le MJ.' },
+  { terme: 'Phrase de passe', def: 'Mot de passe fait de plusieurs mots, plus facile à retenir et plus solide qu’un mot de passe court.' },
+  { terme: 'Chiffrement', def: 'Transformation des données en charabia illisible sans la bonne phrase de passe.' },
+  { terme: 'Passation', def: 'Transmission de la campagne d’un MJ à un autre, avec changement de phrase de passe.' },
+  { terme: 'Règles maison', def: 'Règles propres à votre table, choisies par le MJ, qui remplacent celles du livre.' },
 ]
 
 /** Section du guide à ouvrir selon l'écran affiché. */
@@ -239,4 +276,5 @@ export const SECTION_PAR_ECRAN: Record<string, string> = {
   table: 'table',
   messages: 'messages',
   reglages: 'reglages',
+  mj: 'espace-mj',
 }

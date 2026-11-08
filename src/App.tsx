@@ -12,6 +12,7 @@ import type { TableInfo } from './lib/types'
 import Accueil, { type Onglet } from './screens/Accueil'
 import Fiche from './screens/fiche/Fiche'
 import Messages from './screens/Messages'
+import EspaceMJ from './screens/mj/EspaceMJ'
 import Profil from './screens/Profil'
 import Referentiel from './screens/referentiel/Referentiel'
 import Reglages from './screens/Reglages'
@@ -86,6 +87,7 @@ export default function App() {
         {tab === 'referentiel' && <Referentiel />}
         {tab === 'table' && <Table pendingJoin={pendingJoin} clearPending={() => setPendingJoin(null)} />}
         {tab === 'messages' && <Messages />}
+        {tab === 'mj' && (s.profile.role === 'mj' ? <EspaceMJ /> : <Accueil aller={setTab} />)}
         {tab === 'reglages' && <Reglages />}
       </main>
 
@@ -95,6 +97,7 @@ export default function App() {
         <TabButton id="referentiel" cur={tab} set={setTab} label="Référentiel" icon="📚" />
         <TabButton id="table" cur={tab} set={setTab} label="Table" icon="🕯️" />
         <TabButton id="messages" cur={tab} set={setTab} label="Messages" icon="✉️" badge={unread} />
+        {s.profile.role === 'mj' && <TabButton id="mj" cur={tab} set={setTab} label="MJ" icon="🎭" />}
       </nav>
 
       {editProfile && <Profil onClose={() => setEditProfile(false)} />}

@@ -257,3 +257,20 @@ textarea { resize: vertical; }
   body.imprime-guide .muted, body.imprime-guide dd, body.imprime-guide .guide-faq p { color: #333 !important; }
   body.imprime-guide .guide-tete { background: none; border: 0; }
 }
+
+/* ───── Espace MJ ───── */
+.phrase-passe {
+  font-size: 1.15rem; text-align: center; padding: .8rem; border-radius: 12px; word-break: break-word;
+  background: var(--panel-2); border: 1px dashed var(--gold); color: var(--gold-soft); user-select: all;
+}
+.champ-phrase { flex-wrap: nowrap; }
+.champ-phrase input { min-width: 0; }
+label.case { flex-wrap: nowrap; align-items: flex-start; font-size: .9rem; color: var(--text); }
+label.case input { width: auto; margin-top: .2rem; flex: none; }
+.mj-item > summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; min-height: 32px; }
+.mj-item[open] > summary { margin-bottom: .8rem; }
+.mj-jauges { margin-left: auto; }
+.grid-caracs.mj-caracs { grid-template-columns: repeat(6, 1fr); }
+.grid-caracs.mj-caracs input { text-align: center; padding-left: .2rem; padding-right: .2rem; }
+@media (max-width: 420px) { .grid-caracs.mj-caracs { grid-template-columns: repeat(3, 1fr); } }
+.regle-maison { border-top: 1px solid var(--border); padding-top: .6rem; margin-top: .6rem; display: flex; flex-direction: column; gap: .25rem; }

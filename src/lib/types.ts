@@ -80,3 +80,6 @@ export const RELAYS: Record<RelayKind, string> = {
   mqtt: 'MQTT',
   torrent: 'BitTorrent',
 }
+
+/** Règles maison publiées par le MJ aux joueurs. */
+export type ReglesMaison = { regles: { id: string; titre: string; texte: string }[]; at: number; de: string }
