@@ -135,7 +135,7 @@ Les compteurs **PP actuels** et **PP max** restent toujours modifiables à la ma
 2. Sans caméra : **« Saisir le code à la main »** avec le code et la clé affichés sous le QR du MJ (« Saisie manuelle »).
 
 ## Ce qui s'échange tout seul
-- Ta **fiche** (le personnage affiché) part chez le MJ dès que vous êtes connectés.
+- Ta **fiche** (le personnage affiché) part chez le MJ dès que vous êtes connectés, puis à nouveau quelques secondes après chaque modification.
 - Le **référentiel** du MJ t'est proposé si le tien est différent.
 - L'appli se **reconnecte** toute seule à la dernière table à l'ouverture.
 

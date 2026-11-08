@@ -44,6 +44,11 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.9.1',
+    date: '8 novembre 2026',
+    points: ['Ta fiche part toute seule chez le MJ quelques secondes après chaque changement (nouveau personnage, modification, PP dépensés…), tant que vous êtes connectés à la même Table.'],
+  },
+  {
     version: '0.9.0',
     date: '8 novembre 2026',
     points: [

@@ -8,7 +8,7 @@ import type { Pack } from './pack'
 import { isPack } from './pack'
 import type { Personnage } from './personnage'
 import { nomAffiche, normaliser, nouveauPouvoir } from './personnage'
-import { majPerso, persoActif } from './store'
+import { majPerso, persoActif, subscribe } from './store'
 import type { ChatMessage, Groupe, Peer, Profile, ReglesMaison, RelayKind, Role, TableInfo } from './types'
 import { RELAYS } from './types'
 import type { DemandeJet, JetSecret } from './jets'
@@ -508,11 +508,33 @@ export function mjPeerIds(): string[] {
 export async function sendSheet(targets = mjPeerIds()): Promise<boolean> {
   const perso = persoActif()
   if (!A || targets.length === 0 || !perso) return false
+  derniereFicheEnvoyee = `${perso.id}:${perso.updatedAt}`
   const p = me()
   await A.sheet.send({ perso, name: p.name, deviceId: p.deviceId } as unknown as JsonValue, { target: targets })
   log('Fiche envoyée au MJ…')
   return true
 }
+
+// Joueur : la fiche affichée repart toute seule chez le MJ quand elle change
+// (création, changement de personnage, modification, PP dépensés…), quelques secondes après.
+let derniereFicheEnvoyee = ''
+let ficheEnAttente = ''
+let minuteurFiche: number | undefined
+subscribe(() => {
+  const s = getState()
+  if (s.profile?.role !== 'joueur' || !A) return
+  const perso = persoActif(s)
+  const cle = perso ? `${perso.id}:${perso.updatedAt}` : ''
+  // Rien de nouveau, ou envoi déjà programmé pour cette version de la fiche
+  if (!cle || cle === derniereFicheEnvoyee || cle === ficheEnAttente) return
+  if (!Object.values(s.peers).some((p) => p.role === 'mj')) return
+  ficheEnAttente = cle
+  window.clearTimeout(minuteurFiche)
+  minuteurFiche = window.setTimeout(() => {
+    ficheEnAttente = ''
+    void sendSheet()
+  }, 3000)
+})
 
 // ───────────────────────── Diffusion du référentiel ─────────────────────────
 
