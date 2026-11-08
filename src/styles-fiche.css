@@ -161,6 +161,7 @@ input { text-overflow: ellipsis; }
 .bulle-texte { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .55); display: grid; place-items: end center; padding: 16px; }
 .bulle-texte-boite { width: 100%; max-width: 560px; background: var(--panel); border: 1px solid var(--gold); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.6); margin-bottom: calc(env(safe-area-inset-bottom) + 72px); }
 .bulle-texte-boite p { white-space: pre-wrap; word-break: break-word; max-height: 50dvh; overflow: auto; }
+.serv-row .info-btn, .info-vide { width: 1.5rem; flex: none; text-align: center; padding: 0; }
 .serviteur-titre { display: flex; flex-direction: column; min-width: 0; }
 .card-head h3 { min-width: 0; }
 .tag-mj { color: #1a1208; background: var(--gold); text-transform: none; letter-spacing: 0; }

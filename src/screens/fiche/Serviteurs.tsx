@@ -2,8 +2,11 @@ import type { CaracKey } from '../../lib/pack'
 import { CARAC_ABBR } from '../../lib/pack'
 import type { Personnage, Serviteur } from '../../lib/personnage'
 import { nouveauServiteur, profilDe, TYPES_SERVITEUR } from '../../lib/personnage'
+import { useEffect } from 'react'
+import { caracDuTalent, trouverPouvoir } from '../../lib/referentiel'
 import { useStore } from '../../lib/store'
-import { Area, Card, Empty, Field, ListeOuLibre } from '../../ui'
+import { Area, Card, Empty, Field, Info, ListeOuLibre } from '../../ui'
+import { FichePouvoir } from '../referentiel/Details'
 import type { MajPerso } from './Fiche'
 import { LISTES } from './Suggestions'
 
@@ -15,6 +18,27 @@ export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: 
     .filter((r) => r.camp === p.camp)
     .map((r) => profilDe(r))
     .filter((x): x is NonNullable<typeof x> => !!x)
+
+  // Caractéristique associée remplie automatiquement pour les talents connus du référentiel
+  useEffect(() => {
+    if (!pack) return
+    const manque = p.serviteurs.some((sv) => sv.talents.some((t) => !t.carac && caracDuTalent(pack, t.nom)))
+    if (!manque) return
+    maj((x) => ({
+      ...x,
+      serviteurs: x.serviteurs.map((sv) => ({
+        ...sv,
+        talents: sv.talents.map((t) => (t.carac ? t : { ...t, carac: caracDuTalent(pack, t.nom) })),
+      })),
+    }))
+  }, [p.serviteurs, pack, maj])
+
+  /** Nouveau nom de talent : la caractéristique suit, sauf si elle a été changée à la main. */
+  const renommerTalent = (t: Serviteur['talents'][number], nom: string) => {
+    const auto = caracDuTalent(pack, t.nom)
+    const carac = !t.carac || t.carac === auto ? caracDuTalent(pack, nom) : t.carac
+    return { ...t, nom, carac }
+  }
 
   return (
     <div className="stack">
@@ -84,7 +108,7 @@ export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: 
                 <div className="sub-head">Talents</div>
                 {s.talents.map((t, j) => (
                   <div key={j} className="row serv-row">
-                    <input className="grow" list={LISTES.talents} value={t.nom} placeholder="Talent" onChange={(e) => set(s.id, (x) => ({ ...x, talents: x.talents.map((y, k) => (k === j ? { ...y, nom: e.target.value } : y)) }))} />
+                    <input className="grow" list={LISTES.talents} value={t.nom} placeholder="Talent" onChange={(e) => set(s.id, (x) => ({ ...x, talents: x.talents.map((y, k) => (k === j ? renommerTalent(y, e.target.value) : y)) }))} />
                     <input className="mini" value={t.niveau} placeholder="Niv" aria-label="Niveau" onChange={(e) => set(s.id, (x) => ({ ...x, talents: x.talents.map((y, k) => (k === j ? { ...y, niveau: e.target.value } : y)) }))} />
                     <input className="mini" value={t.carac} placeholder="Carac" aria-label="Caractéristique" onChange={(e) => set(s.id, (x) => ({ ...x, talents: x.talents.map((y, k) => (k === j ? { ...y, carac: e.target.value } : y)) }))} />
                     <input className="mini" value={t.exp} placeholder="Exp" aria-label="Expérience" onChange={(e) => set(s.id, (x) => ({ ...x, talents: x.talents.map((y, k) => (k === j ? { ...y, exp: e.target.value } : y)) }))} />
@@ -100,8 +124,17 @@ export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: 
 
               <div>
                 <div className="sub-head">Pouvoirs</div>
-                {s.pouvoirs.map((pw, j) => (
+                {s.pouvoirs.map((pw, j) => {
+                  const ref = trouverPouvoir(pack, pw.nom, p.camp)
+                  return (
                   <div key={j} className="row serv-row">
+                    {ref ? (
+                      <Info title={ref.nom}>
+                        <FichePouvoir r={ref} />
+                      </Info>
+                    ) : (
+                      <span className="info-vide" aria-hidden />
+                    )}
                     <input className="grow" list={LISTES.pouvoirs} value={pw.nom} placeholder="Pouvoir" onChange={(e) => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.map((y, k) => (k === j ? { ...y, nom: e.target.value } : y)) }))} />
                     <input className="mini" value={pw.niveau} placeholder="Niv" aria-label="Niveau" onChange={(e) => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.map((y, k) => (k === j ? { ...y, niveau: e.target.value } : y)) }))} />
                     <input className="mini" value={pw.pp} placeholder="PP" aria-label="Coût en PP" onChange={(e) => set(s.id, (x) => ({ ...x, pouvoirs: x.pouvoirs.map((y, k) => (k === j ? { ...y, pp: e.target.value } : y)) }))} />
@@ -110,7 +143,8 @@ export default function Serviteurs({ perso: p, maj }: { perso: Personnage; maj: 
                       ✕
                     </button>
                   </div>
-                ))}
+                  )
+                })}
                 <button className="link small" onClick={() => set(s.id, (x) => ({ ...x, pouvoirs: [...x.pouvoirs, { nom: '', niveau: '', pp: '', notes: '' }] }))}>
                   ＋ Pouvoir
                 </button>

@@ -44,6 +44,14 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.5.2',
+    date: '8 novembre 2026',
+    points: [
+      'Serviteurs : un ⓘ à côté de chaque pouvoir connu du référentiel affiche sa description.',
+      'Serviteurs : la caractéristique associée à chaque talent se remplit toute seule, même pour un talent tapé à la main (les langues comptent en Volonté).',
+    ],
+  },
+  {
     version: '0.5.1',
     date: '8 novembre 2026',
     points: [
