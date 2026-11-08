@@ -1,4 +1,4 @@
-import type { Camp, CaracKey, CategorieTalent } from './pack'
+import type { Camp, CaracKey, CategorieTalent, ProfilServiteur } from './pack'
 import { uid } from './storage'
 
 export type TalentPerso = {
@@ -33,13 +33,20 @@ export type LimitationPerso = { id: string; refId?: string; nom: string; notes: 
 
 export type Serviteur = {
   id: string
+  /** Grande famille : Animal, Humain, Mort-vivant, Possédé, Objet… */
   type: string
+  /** Précision : Rat, Majordome, Zombie… */
+  genre: string
   nom: string
+  /** Nombre de créatures (ex. « 11 » pour 3d6 zombies) */
+  nombre: string
   caracs: Record<CaracKey, string>
   talents: { nom: string; niveau: string; carac: string; exp: string }[]
-  pouvoirs: { nom: string; pp: string; notes: string }[]
+  pouvoirs: { nom: string; niveau: string; pp: string; notes: string }[]
   pp: string
   equipement: string
+  /** Pouvoir de la fiche qui a donné ce serviteur */
+  pouvoirId?: string
 }
 
 export type SectionNotes = 'identite' | 'talents' | 'pouvoirs' | 'superieur' | 'serviteurs' | 'general'
@@ -113,9 +120,37 @@ export function nouveauPouvoir(): PouvoirPerso {
 
 export function nouveauServiteur(): Serviteur {
   return {
-    id: uid(), type: '', nom: '',
+    id: uid(), type: '', genre: '', nom: '', nombre: '1',
     caracs: { fo: '', ag: '', vo: '', pr: '', pe: '', ap: '' },
     talents: [], pouvoirs: [], pp: '', equipement: '',
+  }
+}
+
+/** Lance des dés écrits « 3d6 » (ou renvoie le nombre tel quel). */
+export function lancerDes(expr: string): { total: number; detail: string } {
+  const m = expr.trim().match(/^(\d+)d(\d+)$/i)
+  if (!m) return { total: Number(expr) || 1, detail: '' }
+  const des = Array.from({ length: Number(m[1]) }, () => 1 + (crypto.getRandomValues(new Uint32Array(1))[0] % Number(m[2])))
+  return { total: des.reduce((a, b) => a + b, 0), detail: `${expr} : ${des.join(' + ')}` }
+}
+
+/** Serviteur créé à partir du profil d'un pouvoir du référentiel. */
+export function serviteurDepuisProfil(prof: ProfilServiteur, pouvoirId: string): Serviteur {
+  const s = nouveauServiteur()
+  const n = lancerDes(prof.nombre)
+  const v = (k: CaracKey) => (prof.caracs[k] !== undefined ? String(prof.caracs[k]) : '')
+  return {
+    ...s,
+    type: prof.type,
+    genre: prof.genre,
+    nom: prof.genre,
+    nombre: String(n.total),
+    caracs: { fo: v('fo'), ag: v('ag'), vo: v('vo'), pr: v('pr'), pe: v('pe'), ap: v('ap') },
+    pp: prof.caracs.pp !== undefined ? String(prof.caracs.pp) : '',
+    talents: prof.talents.map((t) => ({ nom: t.nom, niveau: String(t.niveau ?? ''), carac: '', exp: '' })),
+    pouvoirs: prof.pouvoirs.map((p) => ({ nom: p.nom, niveau: String(p.niveau ?? ''), pp: '', notes: '' })),
+    equipement: n.detail ? `Nombre tiré au hasard (${n.detail}).` : '',
+    pouvoirId,
   }
 }
 
@@ -144,7 +179,16 @@ export function normaliser(entree: Partial<Personnage> | null | undefined): Pers
     limitations: liste(x.limitations),
     pouvoirsGrade: liste(x.pouvoirsGrade),
     recuperation: liste(x.recuperation),
-    serviteurs: liste(x.serviteurs),
+    serviteurs: liste(x.serviteurs).map((s) => {
+      const b = nouveauServiteur()
+      return {
+        ...b,
+        ...s,
+        caracs: { ...b.caracs, ...s.caracs },
+        talents: liste(s.talents),
+        pouvoirs: liste(s.pouvoirs).map((p) => ({ ...p, niveau: p.niveau ?? '' })),
+      }
+    }),
     id: typeof x.id === 'string' && x.id ? x.id : base.id,
   } as Personnage
 }

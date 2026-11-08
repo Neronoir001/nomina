@@ -37,6 +37,18 @@ export type PouvoirRef = {
   page?: string
   /** Pouvoir propre à un supérieur */
   superieur?: string
+  /** Pouvoir qui donne un serviteur (familier, mort-vivant…) : son profil */
+  serviteur?: ProfilServiteur
+}
+
+export type ProfilServiteur = {
+  type: string
+  genre: string
+  /** Nombre de créatures : « 1 », ou des dés à lancer (« 3d6 ») */
+  nombre: string
+  caracs: Partial<Record<CaracKey | 'pp', number>>
+  talents: { nom: string; niveau: number | string }[]
+  pouvoirs: { nom: string; niveau: number | string }[]
 }
 
 export type LimitationRef = {

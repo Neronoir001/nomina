@@ -38,7 +38,7 @@ export default function PersoResume({ p }: { p: Personnage }) {
         <dt>Pouvoirs de grade</dt>
         <dd>{p.pouvoirsGrade.length ? p.pouvoirsGrade.map((x) => x.texte).join(' / ') : '—'}</dd>
         <dt>Serviteurs</dt>
-        <dd>{p.serviteurs.length ? p.serviteurs.map((x) => `${x.nom || '?'} (${x.type || '?'})`).join(', ') : '—'}</dd>
+        <dd>{p.serviteurs.length ? p.serviteurs.map((x) => `${x.nom || x.genre || '?'}${x.nombre && x.nombre !== '1' ? ` ×${x.nombre}` : ''} (${[x.type, x.genre].filter(Boolean).join(' – ') || '?'})`).join(', ') : '—'}</dd>
         {p.equipement && (
           <>
             <dt>Équipement</dt>

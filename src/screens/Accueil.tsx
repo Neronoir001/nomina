@@ -152,8 +152,8 @@ function CartePerso({ p, actif, ouvrir }: { p: Personnage; actif: boolean; ouvri
           {p.camp === 'INS' ? '😈' : '😇'}
         </span>
         <span className="carte-perso-nom">
-          <b>{nomAffiche(p)}</b>
-          <span className="muted small">{details || (p.camp === 'INS' ? 'Démon' : 'Ange')}</span>
+          <b className="tronque">{nomAffiche(p)}</b>
+          <span className="muted small tronque">{details || (p.camp === 'INS' ? 'Démon' : 'Ange')}</span>
         </span>
         <span className="carte-perso-ouvrir" aria-hidden>
           ›
@@ -249,7 +249,7 @@ function BlocMessages({ aller }: { aller: (o: Onglet) => void }) {
     <Card title={`✉️ Messages${nonLus ? ` — ${nonLus} non lu${nonLus > 1 ? 's' : ''}` : ''}`}>
       <ul className="plain apercu-messages">
         {recus.map((m) => (
-          <li key={m.id}>
+          <li key={m.id} className="tronque">
             <b>{s.contacts[m.from]?.name ?? '?'}</b> : <span className="muted">{m.text.length > 70 ? `${m.text.slice(0, 70)}…` : m.text}</span>
           </li>
         ))}

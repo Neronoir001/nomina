@@ -44,6 +44,15 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.5.0',
+    date: '8 novembre 2026',
+    points: [
+      'Texte coupé par « … » : sur PC, passe la souris dessus pour le lire en entier ; sur téléphone ou tablette, fais un appui long.',
+      'Un pouvoir qui donne un serviteur (Zombies, Rat, Majordome…) le crée tout seul dans l’onglet Serviteurs, avec ses caractéristiques, talents et pouvoirs. Le nombre (ex. 3d6 zombies) est tiré au hasard.',
+      'Serviteurs : en plus du type (Animal, Humain, Mort-vivant…), on indique le genre (Rat, Majordome, Zombie…) et le nombre.',
+    ],
+  },
+  {
     version: '0.4.2',
     date: '8 novembre 2026',
     points: [

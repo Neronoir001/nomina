@@ -60,7 +60,7 @@ export default function Suggestions({ camp }: { camp: Camp }) {
       {dl(LISTES.portees, l.portees)}
       {dl(LISTES.caracs, Object.values(CARAC_LABEL))}
       {dl(LISTES.typesPouvoir, ['Physique', 'Mental', 'Permanent', 'Unique', 'Physique, permanent', 'Mental, permanent', 'Mental, unique'])}
-      {dl(LISTES.typesServiteur, ['Familier', 'Humain', 'Possédé', 'Mort-vivant', 'Zombie', 'Squelette', 'Goule', 'Vampire', 'Animal'])}
+      {dl(LISTES.typesServiteur, ['Animal', 'Humain', 'Mort-vivant', 'Possédé', 'Objet', 'Familier'])}
     </>
   )
 }

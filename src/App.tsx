@@ -63,7 +63,7 @@ export default function App() {
           <span>Nomina</span>
         </button>
         <StatusPill status={s.status} peers={peerCount} />
-        <button className="chip" onClick={() => setEditProfile(true)} title="Modifier mon profil">
+        <button className="chip tronque" onClick={() => setEditProfile(true)} title="Modifier mon profil">
           {s.profile.name} · {roleLabel(s.profile.role)}
         </button>
         <button className={`icon-btn gear${tab === 'reglages' ? ' on' : ''}`} onClick={() => setTab('reglages')} title="Réglages" aria-label="Réglages">

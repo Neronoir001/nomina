@@ -80,7 +80,7 @@ export default function Messages() {
                         {!c.groupe && !c.enLigne && <span className="muted small"> · hors ligne</span>}
                       </span>
                       {c.dernier && (
-                        <span className="muted small apercu">
+                        <span className="muted small apercu tronque">
                           {c.dernier.from === me ? 'Toi : ' : c.groupe ? `${nomDe(c.dernier.from, c.groupe)} : ` : ''}
                           {c.dernier.text}
                         </span>
@@ -144,7 +144,7 @@ function Thread({ info, onBack }: { info: ConvInfo; onBack: () => void }) {
         <button className="link" onClick={onBack}>
           ← Retour
         </button>
-        <b className="thread-titre">{g ? `👥 ${g.nom}` : info.titre}</b>
+        <b className="thread-titre tronque">{g ? `👥 ${g.nom}` : info.titre}</b>
         {!g && <span className="tag">{info.sous}</span>}
         {!g && <span className={`dot ${info.enLigne ? 'dot-on' : ''}`} title={info.enLigne ? 'connecté' : 'hors ligne'} />}
         <button className="icon-btn" onClick={() => setMenu(true)} title="Options de la conversation" aria-label="Options">
