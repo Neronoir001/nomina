@@ -162,11 +162,11 @@ function CartePerso({ p, actif, ouvrir }: { p: Personnage; actif: boolean; ouvri
       {actif ? (
         <div className="grid2 carte-perso-jauges">
           <Stepper label={`PP (max ${p.pp.max})`} value={p.pp.actuel} min={0} onChange={(v) => majPerso(p.id, (x) => ({ ...x, pp: { ...x.pp, actuel: v } }))} />
-          <Stepper label={`Blessures (max ${p.blessures.max})`} value={p.blessures.actuel} min={0} onChange={(v) => majPerso(p.id, (x) => ({ ...x, blessures: { ...x.blessures, actuel: v } }))} />
+          <Stepper label={`PV (max ${p.blessures.max})`} value={p.blessures.actuel} min={0} onChange={(v) => majPerso(p.id, (x) => ({ ...x, blessures: { ...x.blessures, actuel: v } }))} />
         </div>
       ) : (
         <p className="muted small carte-perso-resume">
-          PP {p.pp.actuel}/{p.pp.max} · Blessures {p.blessures.actuel}/{p.blessures.max}
+          PP {p.pp.actuel}/{p.pp.max} · PV {p.blessures.actuel}/{p.blessures.max}
         </p>
       )}
     </div>

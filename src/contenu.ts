@@ -44,6 +44,14 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.5.3',
+    date: '8 novembre 2026',
+    points: [
+      'Serviteurs : le coût en PP de chaque pouvoir se remplit tout seul, et un compteur « PP actuels » avec − et + permet de suivre leurs PP en partie.',
+      'Fiche : « Blessures » devient « PV actuels » et « PV max », dans le bloc « Pouvoir et points de vie ».',
+    ],
+  },
+  {
     version: '0.5.2',
     date: '8 novembre 2026',
     points: [

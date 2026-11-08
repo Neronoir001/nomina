@@ -25,7 +25,7 @@ export default function PersoResume({ p }: { p: Personnage }) {
         <dd>
           {p.pp.actuel} / {p.pp.max}
         </dd>
-        <dt>Blessures</dt>
+        <dt>Points de vie</dt>
         <dd>
           {p.blessures.actuel} / {p.blessures.max}
         </dd>

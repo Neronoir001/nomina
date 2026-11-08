@@ -92,12 +92,12 @@ export default function Identite({ perso: p, maj }: { perso: Personnage; maj: Ma
         </div>
       </Card>
 
-      <Card title="Pouvoir et blessures">
+      <Card title="Pouvoir et points de vie">
         <div className="grid2">
           <Stepper label="PP actuels" value={p.pp.actuel} onChange={(v) => maj((x) => ({ ...x, pp: { ...x.pp, actuel: v } }))} min={0} />
           <Stepper label="PP maximum" value={p.pp.max} onChange={(v) => maj((x) => ({ ...x, pp: { ...x.pp, max: v } }))} min={0} />
-          <Stepper label="Blessures" value={p.blessures.actuel} onChange={(v) => maj((x) => ({ ...x, blessures: { ...x.blessures, actuel: v } }))} min={0} />
-          <Stepper label="Blessures max" value={p.blessures.max} onChange={(v) => maj((x) => ({ ...x, blessures: { ...x.blessures, max: v } }))} min={0} />
+          <Stepper label="PV actuels" value={p.blessures.actuel} onChange={(v) => maj((x) => ({ ...x, blessures: { ...x.blessures, actuel: v } }))} min={0} />
+          <Stepper label="PV max" value={p.blessures.max} onChange={(v) => maj((x) => ({ ...x, blessures: { ...x.blessures, max: v } }))} min={0} />
         </div>
       </Card>
 

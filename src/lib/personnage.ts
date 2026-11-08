@@ -43,7 +43,10 @@ export type Serviteur = {
   caracs: Record<CaracKey, string>
   talents: { nom: string; niveau: string; carac: string; exp: string }[]
   pouvoirs: { nom: string; niveau: string; pp: string; notes: string }[]
+  /** PP maximum */
   pp: string
+  /** PP restants, pour le décompte en partie */
+  ppActuel: number
   equipement: string
   /** Pouvoir de la fiche qui a donné ce serviteur */
   pouvoirId?: string
@@ -122,7 +125,7 @@ export function nouveauServiteur(): Serviteur {
   return {
     id: uid(), type: '', genre: '', nom: '', nombre: '1',
     caracs: { fo: '', ag: '', vo: '', pr: '', pe: '', ap: '' },
-    talents: [], pouvoirs: [], pp: '', equipement: '',
+    talents: [], pouvoirs: [], pp: '', ppActuel: 0, equipement: '',
   }
 }
 
@@ -201,6 +204,7 @@ export function serviteurDepuisProfil(prof: ProfilServiteur, pouvoirId: string):
     nombre: String(n.total),
     caracs: { fo: v('fo'), ag: v('ag'), vo: v('vo'), pr: v('pr'), pe: v('pe'), ap: v('ap') },
     pp: prof.caracs.pp !== undefined ? String(prof.caracs.pp) : '',
+    ppActuel: prof.caracs.pp ?? 0,
     talents: prof.talents.map((t) => ({ nom: t.nom, niveau: String(t.niveau ?? ''), carac: '', exp: '' })),
     pouvoirs: prof.pouvoirs.map((p) => ({ nom: p.nom, niveau: String(p.niveau ?? ''), pp: '', notes: '' })),
     equipement: n.detail ? `Nombre tiré au hasard (${n.detail}).` : '',
@@ -239,6 +243,7 @@ export function normaliser(entree: Partial<Personnage> | null | undefined): Pers
         ...b,
         ...s,
         type: s.type === 'Objet' || s.type === 'Possédé' ? 'Objet possédé' : (s.type ?? ''),
+        ppActuel: typeof s.ppActuel === 'number' ? s.ppActuel : Number(s.pp) || 0,
         caracs: { ...b.caracs, ...s.caracs },
         talents: liste(s.talents),
         pouvoirs: liste(s.pouvoirs).map((p) => ({ ...p, niveau: p.niveau ?? '' })),

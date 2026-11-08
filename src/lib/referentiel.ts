@@ -41,6 +41,25 @@ export function trouverTalent(pack: Pack | null | undefined, nom: string): Talen
     .find((t) => n.startsWith(`${norm(t.nom)} `))
 }
 
+/** Coût en PP d'un pouvoir, en version courte pour une petite case (« 2 », « 1/min », « 3/s », « tous »…). */
+export function coutCourt(cout?: string): string {
+  if (!cout) return ''
+  const c = cout.trim()
+  if (/^tous/i.test(c)) return 'tous'
+  const n = c.match(/^(\d+)\s*(PP)?/i)
+  if (!n) return c
+  if (/par seconde/i.test(c)) return `${n[1]}/s`
+  if (/par minute/i.test(c)) return `${n[1]}/min`
+  if (/par heure/i.test(c)) return `${n[1]}/h`
+  if (/par personne|par objet/i.test(c)) return `${n[1]}/cible`
+  return n[1]
+}
+
+/** Coût en PP d'un pouvoir du référentiel retrouvé par son nom. */
+export function coutDuPouvoir(pack: Pack | null | undefined, nom: string, camp?: Camp): string {
+  return coutCourt(trouverPouvoir(pack, nom, camp)?.cout)
+}
+
 /** Caractéristique associée à un talent (« Ag », « Vo »…), ou chaîne vide si inconnue. */
 export function caracDuTalent(pack: Pack | null | undefined, nom: string): string {
   const t = trouverTalent(pack, nom)
