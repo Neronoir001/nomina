@@ -20,7 +20,7 @@ const DESCRIPTION: { k: keyof Personnage['description']; label: string }[] = [
   { k: 'armure', label: 'Armure' },
 ]
 
-const RANG_NUM: Record<string, number> = { chevalier: 1, capitaine: 2, baron: 3 }
+const RANG_NUM: Record<string, number> = { chevalier: 1, capitaine: 2, baron: 3, serviteur: 1, ami: 2, maitre: 3 }
 
 /** Grade : menu des grades accordés par le supérieur choisi, sinon saisie libre. */
 function ChoixGrade({ perso: p, onChange }: { perso: Personnage; onChange: (v: string) => void }) {

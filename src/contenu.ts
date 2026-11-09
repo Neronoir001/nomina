@@ -44,6 +44,15 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.11.0',
+    date: '9 novembre 2026',
+    points: [
+      'Côté anges : le référentiel 0.5 contient les 21 Archanges de Magna Veritas, tous les pouvoirs d’anges (table d666 complète) et leurs 36 limitations. Ton MJ te l’envoie à la Table.',
+      'La création guidée fonctionne maintenant aussi pour les anges (20 points de caractéristiques, 8 de talents).',
+      'Les « distinctions » des Archanges apparaissent comme grades sur la fiche. Les pouvoirs qui donnent des humains à son service (détective, sections de soldats…) créent le serviteur automatiquement.',
+    ],
+  },
+  {
     version: '0.10.0',
     date: '9 novembre 2026',
     points: [

@@ -124,7 +124,7 @@ export function FicheSuperieur({ s }: { s: SuperieurRef }) {
 
       {!!s.grades?.length && (
         <div>
-          <div className="sub-head">Grades accordés</div>
+          <div className="sub-head">{s.camp === 'MV' ? 'Distinctions accordées' : 'Grades accordés'}</div>
           <ul className="plain">
             {s.grades.map((g) => (
               <li key={g.titre}>

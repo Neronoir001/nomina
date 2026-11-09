@@ -10,7 +10,7 @@ const ETAPES: Etape[] = [
   },
   { cible: 'accueil', titre: 'Accueil', texte: 'Tes personnages, leurs PP et PV, la Table et tes messages, d’un coup d’œil.' },
   { cible: 'fiche', titre: 'Fiche', texte: 'La fiche complète de ton personnage : identité, talents, pouvoirs, supérieur et serviteurs. Tout s’enregistre tout seul.' },
-  { cible: 'referentiel', titre: 'Référentiel', texte: 'Princes, pouvoirs, talents et limitations, avec recherche. Ton MJ te l’envoie quand tu rejoins sa Table.' },
+  { cible: 'referentiel', titre: 'Référentiel', texte: 'Princes et archanges, pouvoirs, talents et limitations, avec recherche. Ton MJ te l’envoie quand tu rejoins sa Table.' },
   { cible: 'table', titre: 'Table', texte: 'Pour rejoindre la partie du MJ en scannant son QR code. Ta fiche lui est alors envoyée automatiquement.' },
   { cible: 'messages', titre: 'Messages', texte: 'Des messages privés, à deux ou en groupe, que seuls les destinataires reçoivent.' },
   { cible: 'mj', mj: true, titre: 'Espace MJ', texte: 'Ton espace secret, chiffré par une phrase de passe : notes de campagne, séances, PNJ et règles maison.' },
