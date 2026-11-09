@@ -44,6 +44,16 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.10.0',
+    date: '9 novembre 2026',
+    points: [
+      'Création guidée : « ＋ Nouveau » à l’accueil (ou ＋ sur la fiche) → Création guidée. Sept étapes : identité, supérieur, caractéristiques, talents, pouvoirs, limitation, récapitulatif.',
+      'Les points se décomptent tout seuls (18 en caractéristiques et 12 en talents pour un démon), et les pouvoirs et la limitation se tirent aux dés comme dans le livre. Les tirages sont notés sur la fiche.',
+      'La création est gardée si tu fermes l’appli : « Reprendre la création » à l’accueil.',
+      'MJ : Espace MJ → Règles → « Création des personnages » pour changer les points, choisir les pouvoirs au lieu de les tirer, et régler le contrôle (strict, conseil ou libre).',
+    ],
+  },
+  {
     version: '0.9.1',
     date: '8 novembre 2026',
     points: ['Ta fiche part toute seule chez le MJ quelques secondes après chaque changement (nouveau personnage, modification, PP dépensés…), tant que vous êtes connectés à la même Table.'],

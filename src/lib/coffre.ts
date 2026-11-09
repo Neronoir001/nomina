@@ -4,6 +4,7 @@
 import { createStore, del, get, set } from 'idb-keyval'
 import { useSyncExternalStore } from 'react'
 import type { CaracKey } from './pack'
+import { normaliserProfil, type ProfilCreation } from './creation'
 import { uid } from './storage'
 
 // ───────── Contenu ─────────
@@ -34,11 +35,13 @@ export type ContenuCoffre = {
   journal: Seance[]
   pnj: PNJ[]
   regles: RegleMaison[]
+  /** Règles de création (null = 3e édition officielle) */
+  creation: ProfilCreation | null
   creeLe: number
 }
 
 export function contenuVide(): ContenuCoffre {
-  return { v: 1, campagne: { nom: '', notes: '', aides: '' }, journal: [], pnj: [], regles: [], creeLe: Date.now() }
+  return { v: 1, campagne: { nom: '', notes: '', aides: '' }, journal: [], pnj: [], regles: [], creation: null, creeLe: Date.now() }
 }
 
 export function nouveauPNJ(): PNJ {
@@ -66,6 +69,7 @@ function normaliserContenu(c: Partial<ContenuCoffre> | null | undefined): Conten
     journal: Array.isArray(c.journal) ? c.journal : [],
     pnj: Array.isArray(c.pnj) ? c.pnj.map((p) => ({ ...nouveauPNJ(), ...p })) : [],
     regles: Array.isArray(c.regles) ? c.regles.map((r) => ({ ...nouvelleRegle(), ...r })) : [],
+    creation: c.creation ? normaliserProfil(c.creation) : null,
     creeLe: c.creeLe ?? base.creeLe,
   }
 }

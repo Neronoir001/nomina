@@ -6,11 +6,11 @@ import { exporterTout, importerFichier } from '../lib/fichiers'
 import { isStandalone } from '../lib/install'
 import { appliquerMaj, ecouterMaj, majDisponible } from '../lib/maj'
 import { joinTable, joueurPeerIds, roleLabel, sendReferentiel } from '../lib/p2p'
-import type { Camp } from '../lib/pack'
 import type { Personnage } from '../lib/personnage'
-import { nomAffiche, nouveauPersonnage } from '../lib/personnage'
-import { creerPerso, heure, listePersos, majPerso, setState, useStore } from '../lib/store'
-import { Card, FilePick, Stepper } from '../ui'
+import { nomAffiche } from '../lib/personnage'
+import { getState, heure, listePersos, majPerso, setState, useStore } from '../lib/store'
+import { Card, FilePick, Modal, Stepper } from '../ui'
+import { ChoixNouveau } from '../creation/Nouveau'
 import { BoutonPP } from '../BoutonPP'
 import { BoutonJetMJ, BoutonJetSecret } from '../JetSecret'
 
@@ -114,25 +114,32 @@ function Personnages({ aller }: { aller: (o: Onglet) => void }) {
     setState({ actifId: p.id })
     aller('fiche')
   }
-  const creer = (camp: Camp) => {
-    creerPerso(nouveauPersonnage(camp))
-    aller('fiche')
-  }
+  const [nouveau, setNouveau] = useState(false)
   return (
     <Card
       title="📜 Mes personnages"
       actions={
-        <>
-          <button className="btn btn-small" onClick={() => creer('INS')} title="Nouveau démon">
-            ＋ 😈
-          </button>
-          <button className="btn btn-small" onClick={() => creer('MV')} title="Nouvel ange">
-            ＋ 😇
-          </button>
-        </>
+        <button className="btn btn-small" onClick={() => setNouveau(true)} title="Nouveau personnage">
+          ＋ Nouveau
+        </button>
       }
     >
-      {persos.length === 0 && <p className="muted">Aucun personnage pour l'instant. Crée un démon ou un ange avec les boutons ci-dessus.</p>}
+      {persos.length === 0 && <p className="muted">Aucun personnage pour l'instant. Touche « ＋ Nouveau » pour en créer un, pas à pas.</p>}
+      {s.brouillonCreation && (
+        <button className="btn btn-primary creation-reprendre" onClick={() => setState({ creationOuverte: true })}>
+          ▶ Reprendre la création{s.brouillonCreation.nom || s.brouillonCreation.nomCouverture ? ` de ${s.brouillonCreation.nom || s.brouillonCreation.nomCouverture}` : ' en cours'}
+        </button>
+      )}
+      {nouveau && (
+        <Modal title="Nouveau personnage" onClose={() => setNouveau(false)}>
+          <ChoixNouveau
+            onDone={() => {
+              setNouveau(false)
+              if (!getState().creationOuverte) aller('fiche')
+            }}
+          />
+        </Modal>
+      )}
       <div className="stack">
         {persos.map((p) => (
           <CartePerso key={p.id} p={p} actif={p.id === s.actifId} ouvrir={() => ouvrir(p)} />

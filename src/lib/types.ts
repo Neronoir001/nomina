@@ -1,3 +1,4 @@
+import type { ProfilCreation } from './creation'
 import type { Personnage } from './personnage'
 
 export type Role = 'joueur' | 'mj'
@@ -82,4 +83,4 @@ export const RELAYS: Record<RelayKind, string> = {
 }
 
 /** Règles maison publiées par le MJ aux joueurs. */
-export type ReglesMaison = { regles: { id: string; titre: string; texte: string }[]; at: number; de: string }
+export type ReglesMaison = { regles: { id: string; titre: string; texte: string }[]; at: number; de: string; creation?: ProfilCreation }

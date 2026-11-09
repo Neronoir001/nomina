@@ -205,8 +205,13 @@ function makeActions(r: Room): Actions {
     const avant = getState().reglesMaison
     if (avant && avant.at === rm.at) return
     setState({ reglesMaison: rm })
-    if (rm.regles.length)
-      setState({ annonce: { titre: 'Règles maison', texte: `${rm.de} a publié ${rm.regles.length} règle(s) maison. Tu les trouveras dans Référentiel → Règles.` } })
+    if (rm.regles.length || rm.creation)
+      setState({
+        annonce: {
+          titre: 'Règles maison',
+          texte: `${rm.de} a publié ses règles${rm.regles.length ? ` : ${rm.regles.length} règle(s) maison, à lire dans Référentiel → Règles` : ''}${rm.creation ? `${rm.regles.length ? ', et ' : ' : '}les règles de création « ${rm.creation.nom} »` : ''}.`,
+        },
+      })
     log(`Règles maison reçues de ${rm.de} (${rm.regles.length}).`, 'ok')
   }
 
@@ -362,8 +367,8 @@ export async function demanderJet(dem: DemandeJet): Promise<boolean> {
 }
 
 /** MJ : publie les règles maison à tous les joueurs (connectés maintenant, ou à leur prochaine connexion). */
-export async function publierRegles(regles: ReglesMaison['regles']): Promise<number> {
-  const rm: ReglesMaison = { regles, at: Date.now(), de: me().name }
+export async function publierRegles(regles: ReglesMaison['regles'], creation?: ReglesMaison['creation']): Promise<number> {
+  const rm: ReglesMaison = { regles, at: Date.now(), de: me().name, ...(creation ? { creation } : {}) }
   setState({ reglesMaison: rm })
   const cibles = joueurPeerIds()
   if (A && cibles.length) await A.regles.send(rm as unknown as JsonValue, { target: cibles })

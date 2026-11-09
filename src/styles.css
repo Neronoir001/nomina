@@ -297,3 +297,34 @@ label.case input { width: auto; margin-top: .2rem; flex: none; }
 .pastille { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
 .pastille.ok { background: var(--ok); }
 .pastille.ko { background: var(--red); }
+
+/* ───── Création guidée ───── */
+.creation .guide-tete h2 { font-size: 1.2rem; }
+.creation-progres { display: flex; gap: 4px; padding: 6px 16px; max-width: 720px; width: 100%; margin: 0 auto; }
+.creation-progres span { flex: 1; height: 4px; border-radius: 2px; background: var(--panel-2); }
+.creation-progres .fait { background: var(--gold); }
+.creation-progres .en-cours { background: var(--gold-soft); }
+.creation-pied {
+  display: flex; justify-content: space-between; gap: .6rem; padding: .6rem 16px calc(env(safe-area-inset-bottom) + .6rem);
+  border-top: 1px solid var(--border); background: rgba(20, 16, 18, .96);
+}
+.creation-pied .btn { flex: 1; max-width: 340px; }
+.compteur { font-size: 1.05rem; padding: .5rem .7rem; border-radius: 10px; background: var(--panel-2); text-align: center; }
+.compteur b { font-size: 1.3rem; color: var(--gold-soft); }
+.compteur.ok { box-shadow: 0 0 0 1px var(--ok) inset; }
+.compteur.ok b { color: var(--ok); }
+.compteur.ko { box-shadow: 0 0 0 1px var(--red) inset; }
+.compteur.ko b { color: #ff8a84; }
+.creation-alertes { margin: 0; padding: .6rem .8rem .6rem 1.8rem; border-radius: 10px; background: rgba(224, 168, 74, .12); border: 1px solid var(--warn); font-size: .9rem; }
+.creation-alertes.bloquant { background: rgba(195, 49, 42, .12); border-color: var(--red); }
+.creation-talents, .creation-pouvoirs { display: flex; flex-direction: column; gap: 4px; }
+.creation-talents li, .creation-pouvoirs li { display: flex; align-items: center; gap: .5rem; min-height: 44px; padding: 0 .3rem; border-radius: 8px; }
+.creation-talents li.pris { background: var(--panel-2); }
+.creation-talents select { width: auto; min-width: 92px; flex: none; }
+.de-mini {
+  display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 4px; border-radius: 6px; flex: none;
+  background: var(--panel-2); color: var(--gold-soft); border: 1px solid var(--border); font: 700 .85rem Georgia, serif;
+}
+.de-mini.large { min-width: 40px; height: 32px; background: var(--gold-soft); color: #1a1208; border: 0; }
+.creation-tire { flex-wrap: nowrap; padding: .3rem 0; }
+.creation-reprendre { width: 100%; margin-top: .6rem; }

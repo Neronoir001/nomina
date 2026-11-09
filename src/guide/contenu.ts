@@ -42,7 +42,7 @@ Au premier lancement, indique ton prénom et ton rôle : **Joueur** ou **Maître
     corps: `L'accueil résume tout ce dont tu as besoin en un coup d'œil.
 
 - **À faire** : n'apparaît que s'il reste quelque chose à faire (mise à jour, référentiel à installer, sauvegarde ancienne, installation de l'appli).
-- **Mes personnages** : une carte par personnage. Touche-la pour ouvrir la fiche. Les boutons **＋ 😈** et **＋ 😇** créent un démon ou un ange.
+- **Mes personnages** : une carte par personnage. Touche-la pour ouvrir la fiche. **＋ Nouveau** crée un démon ou un ange, pas à pas (voir « Créer un personnage »). Une création commencée se reprend avec **▶ Reprendre la création**.
 - Le **personnage actif** a ses **PP** et **PV** réglables avec − / +, et la liste de ses pouvoirs avec leur bouton **⚡** : idéal en pleine partie.
 - **La Table** : ton état de connexion et un bouton pour l'ouvrir (MJ) ou la rejoindre (joueur).
 - **Messages** : les derniers messages reçus.
@@ -57,7 +57,7 @@ Au premier lancement, indique ton prénom et ton rôle : **Joueur** ou **Maître
 
 ## Gérer ses personnages
 - Le menu en haut de la fiche choisit le personnage affiché.
-- **＋** crée un nouveau démon ou ange.
+- **＋** crée un nouveau démon ou ange : création guidée ou fiche vierge.
 - **⋯** permet d'**exporter / partager** le personnage (fichier), d'en **importer** un, de le **dupliquer** ou de le **supprimer**.
 
 ## Identité
@@ -85,6 +85,28 @@ Choix du supérieur (avec recherche). La **possibilité d'intervention** et la *
 - **Type** et **genre** se choisissent dans des menus, avec « Autre » pour une saisie libre.
 - La caractéristique des talents et le coût en PP des pouvoirs se remplissent seuls ; **ⓘ** décrit chaque pouvoir.
 - Chaque serviteur a son compteur **PP actuels** et ses boutons **⚡**.`,
+  },
+  {
+    id: 'creation',
+    titre: 'Créer un personnage',
+    icone: '🧭',
+    public: 'tous',
+    corps: `À l'accueil, **＋ Nouveau** → **Création guidée**, puis 😈 Démon ou 😇 Ange. L'assistant suit les règles de ton MJ (par défaut, celles de la 3e édition). Tu peux fermer à tout moment : la création est gardée.
+
+1. **Identité** : nom véritable et nom de couverture.
+2. **Supérieur** : ton Prince-Démon ou ton Archange, avec son rôle et ses pouvoirs privilégiés.
+3. **Caractéristiques** : répartis tes points (18 pour un démon, 20 pour un ange, de 1 à 5 chacune). Le compteur indique ce qu'il reste. Tes PP valent Volonté + 4.
+4. **Talents** : choisis un niveau (niveau 1 = 1 point, 2 = 2, 3 = 4, 4 = 8). Un talent ne dépasse jamais sa caractéristique associée. 12 points pour un démon, 8 pour un ange.
+5. **Pouvoirs** : choisis d'abord 1 pouvoir parmi les 6 privilégiés de ton supérieur, puis **🎲 lance 1d6** pour un deuxième, et **deux d666** dans la table générale. Un pouvoir déjà obtenu est relancé automatiquement.
+6. **Limitation** : **🎲 lance 1d66**.
+7. **Récapitulatif** : vérifie, puis **✨ Créer le personnage**.
+
+## Bon à savoir
+- Les **serviteurs** donnés par un pouvoir sont créés automatiquement.
+- Les **tirages** sont recopiés dans les notes de la fiche, que ton MJ reçoit.
+- Tout reste modifiable ensuite sur la fiche ; langues et spécialisations s'y ajoutent.
+- Si ton MJ l'a décidé, les pouvoirs et la limitation se **choisissent** au lieu d'être tirés, ou les points sont différents.
+- **Fiche vierge** : pour recopier un personnage existant sans assistant.`,
   },
   {
     id: 'pp',
@@ -232,6 +254,7 @@ Création guidée selon tes règles, validation des fiches.`,
 - **Séances** : le journal de chaque partie, daté.
 - **PNJ** : humains, démons, anges, serviteurs… avec caractéristiques, PP et PV réglables en partie, talents, pouvoirs et notes. **📑 Dupliquer** pour créer vite une bande de sbires, **♻️** pour remettre PP et PV au maximum.
 - **Règles** : tes règles maison. Coche **Visible des joueurs** puis touche **Publier** : elles leur sont envoyées, et renvoyées à chaque connexion à ta Table. Les autres restent secrètes.
+- **Création des personnages** (même onglet) : points de caractéristiques et de talents, limites, nombre de pouvoirs, tirage aux dés ou choix libre, et contrôle **Strict** (bloque), **Conseil** (avertit) ou **Libre**. **↺ Revenir à la 3e édition** remet les règles du livre. Elles partent avec **Publier**.
 
 ## Verrouillage
 - **🔒 Verrouiller** ferme l'espace ; il faudra la phrase pour le rouvrir.

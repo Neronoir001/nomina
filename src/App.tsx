@@ -6,6 +6,7 @@ import { ConseilsDemarrage, EcranErreur } from './Erreurs'
 import { SECTION_PAR_ECRAN } from './guide/contenu'
 import Guide from './guide/Guide'
 import Visite from './guide/Visite'
+import Assistant from './creation/Assistant'
 import { parseJoin } from './lib/codes'
 import { roleLabel } from './lib/p2p'
 import { log, setState, useStore } from './lib/store'
@@ -102,6 +103,8 @@ export default function App() {
       </nav>
 
       {editProfile && <Profil onClose={() => setEditProfile(false)} />}
+
+      {s.creationOuverte && <Assistant onFini={() => setTab('fiche')} />}
 
       {guide !== null && (
         <Guide

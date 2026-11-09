@@ -5,6 +5,7 @@ import {
   useCoffre, verrouiller, type ContenuCoffre, type PNJ, type RegleMaison, type Seance,
 } from '../../lib/coffre'
 import { partagerFichier } from '../../lib/fichiers'
+import { estOfficiel, PROFIL_OFFICIEL, type ProfilCreation } from '../../lib/creation'
 import { CARAC_ABBR, CARAC_LABEL, type CaracKey } from '../../lib/pack'
 import { publierRegles } from '../../lib/p2p'
 import { uid } from '../../lib/storage'
@@ -78,7 +79,7 @@ function EspaceOuvert({ contenu }: { contenu: ContenuCoffre }) {
       {onglet === 'campagne' && <Campagne c={contenu} />}
       {onglet === 'journal' && <Journal liste={contenu.journal} />}
       {onglet === 'pnj' && <ListePNJ liste={contenu.pnj} />}
-      {onglet === 'regles' && <Regles liste={contenu.regles} />}
+      {onglet === 'regles' && <Regles liste={contenu.regles} creation={contenu.creation} />}
       {onglet === 'securite' && <Securite />}
     </div>
   )
@@ -257,7 +258,7 @@ function ListePNJ({ liste }: { liste: PNJ[] }) {
 
 // ───────── Règles maison ─────────
 
-function Regles({ liste }: { liste: RegleMaison[] }) {
+function Regles({ liste, creation }: { liste: RegleMaison[]; creation: ProfilCreation | null }) {
   const s = useStore()
   const [msg, setMsg] = useState<string | null>(null)
   const maj = (id: string, p: Partial<RegleMaison>) => majCoffre((x) => ({ ...x, regles: x.regles.map((r) => (r.id === id ? { ...r, ...p } : r)) }))
@@ -294,6 +295,8 @@ function Regles({ liste }: { liste: RegleMaison[] }) {
           </div>
         </div>
       ))}
+      <ReglagesCreation creation={creation} />
+
       <Card title="📢 Publication">
         <div className="stack">
           <p className="small">
@@ -304,20 +307,99 @@ function Regles({ liste }: { liste: RegleMaison[] }) {
           <button
             className="btn"
             onClick={async () => {
-              const n = await publierRegles(publiques.map(({ id, titre, texte }) => ({ id, titre, texte })))
-              setMsg(
-                n
-                  ? `${publiques.length} règle(s) publiée(s) et envoyée(s) à ${n} joueur(s) connecté(s).`
-                  : `${publiques.length} règle(s) publiée(s). Les joueurs les recevront à leur prochaine connexion à ta Table.`,
-              )
+              const n = await publierRegles(publiques.map(({ id, titre, texte }) => ({ id, titre, texte })), creation ?? undefined)
+              const quoi = [publiques.length ? `${publiques.length} règle(s) maison` : '', creation ? `les règles de création « ${creation.nom} »` : 'la création 3e édition']
+                .filter(Boolean)
+                .join(' et ')
+              setMsg(n ? `Publié : ${quoi}, envoyé à ${n} joueur(s) connecté(s).` : `Publié : ${quoi}. Les joueurs les recevront à leur prochaine connexion à ta Table.`)
             }}
           >
-            Publier les {publiques.length} règle(s) visibles
+            Publier les {publiques.length} règle(s) visibles{creation ? ' et la création' : ''}
           </button>
           {msg && <p className="note-ok small">{msg}</p>}
         </div>
       </Card>
     </div>
+  )
+}
+
+// ───────── Règles de création ─────────
+
+function ReglagesCreation({ creation }: { creation: ProfilCreation | null }) {
+  const p = creation ?? PROFIL_OFFICIEL
+  const set = (patch: Partial<ProfilCreation>) =>
+    majCoffre((x) => {
+      const n = { ...(x.creation ?? PROFIL_OFFICIEL), ...patch }
+      return { ...x, creation: estOfficiel(n) ? null : { ...n, nom: n.nom === PROFIL_OFFICIEL.nom ? 'Règles maison' : n.nom } }
+    })
+  const setBudget = (camp: 'INS' | 'MV', k: 'caracPoints' | 'talentPoints', v: number) => set({ budgets: { ...p.budgets, [camp]: { ...p.budgets[camp], [k]: v } } })
+  const publie = useStore().reglesMaison?.creation
+
+  return (
+    <Card title="🧭 Création des personnages">
+      <div className="stack">
+        <p className="muted small">
+          Règles utilisées par l'assistant de création de tes joueurs. Par défaut, celles du livre (3e édition). Elles partent avec la publication ci-dessous.
+          {' '}
+          {publie ? `Publiées : « ${publie.nom} ».` : 'Publiées : 3e édition (officiel).'}
+        </p>
+        {creation && <Field label="Nom de tes règles" value={creation.nom} onChange={(v) => set({ nom: v })} />}
+        <div className="stack-sm">
+          <span className="stepper-label">Pouvoirs et limitation</span>
+          <Seg<'des' | 'choix'>
+            small
+            value={p.tirage}
+            onChange={(v) => set({ tirage: v })}
+            options={[
+              { id: 'des', label: '🎲 Tirés aux dés (livre)' },
+              { id: 'choix', label: 'Choisis librement' },
+            ]}
+          />
+        </div>
+        <div className="stack-sm">
+          <span className="stepper-label">Contrôle des points</span>
+          <Seg<ProfilCreation['controle']>
+            small
+            value={p.controle}
+            onChange={(v) => set({ controle: v })}
+            options={[
+              { id: 'strict', label: 'Strict' },
+              { id: 'conseil', label: 'Conseil' },
+              { id: 'libre', label: 'Libre' },
+            ]}
+          />
+          <span className="muted small">
+            {p.controle === 'strict' ? 'Impossible de passer à l’étape suivante tant que les règles ne sont pas respectées.' : p.controle === 'conseil' ? 'Les écarts sont signalés, mais le joueur peut continuer.' : 'Aucun contrôle : les compteurs restent affichés.'}
+          </span>
+        </div>
+        <details className="mj-item">
+          <summary>
+            <b>Points et limites</b>
+          </summary>
+          <div className="stack">
+            <div className="grid2">
+              <Stepper label="😈 Caractéristiques" value={p.budgets.INS.caracPoints} min={6} max={40} onChange={(v) => setBudget('INS', 'caracPoints', v)} />
+              <Stepper label="😈 Talents" value={p.budgets.INS.talentPoints} min={0} max={40} onChange={(v) => setBudget('INS', 'talentPoints', v)} />
+              <Stepper label="😇 Caractéristiques" value={p.budgets.MV.caracPoints} min={6} max={40} onChange={(v) => setBudget('MV', 'caracPoints', v)} />
+              <Stepper label="😇 Talents" value={p.budgets.MV.talentPoints} min={0} max={40} onChange={(v) => setBudget('MV', 'talentPoints', v)} />
+              <Stepper label="Caractéristique min" value={p.caracMin} min={0} max={3} onChange={(v) => set({ caracMin: v })} />
+              <Stepper label="Caractéristique max" value={p.caracMax} min={3} max={6} onChange={(v) => set({ caracMax: v })} />
+              <Stepper label="Niveau max d’un talent" value={p.talentMax} min={1} max={6} onChange={(v) => set({ talentMax: v })} />
+              <Stepper label="PP = Volonté +" value={p.ppBonus} min={0} max={20} onChange={(v) => set({ ppBonus: v })} />
+              <Stepper label="Pouvoirs privilégiés choisis" value={p.privChoisis} min={0} max={6} onChange={(v) => set({ privChoisis: v })} />
+              <Stepper label="Privilégiés tirés (d6)" value={p.privTires} min={0} max={5} onChange={(v) => set({ privTires: v })} />
+              <Stepper label="Table générale (d666)" value={p.generauxTires} min={0} max={10} onChange={(v) => set({ generauxTires: v })} />
+              <Stepper label="Limitations (d66)" value={p.limitations} min={0} max={5} onChange={(v) => set({ limitations: v })} />
+            </div>
+          </div>
+        </details>
+        {creation && (
+          <button className="btn btn-small" onClick={() => majCoffre((x) => ({ ...x, creation: null }))}>
+            ↺ Revenir à la 3e édition
+          </button>
+        )}
+      </div>
+    </Card>
   )
 }
 

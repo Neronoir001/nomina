@@ -3,6 +3,7 @@ import { clear, createStore, getMany, set as idbSet } from 'idb-keyval'
 import type { Pack } from './pack'
 import type { Annulation } from './pp'
 import type { JetSecret } from './jets'
+import type { Brouillon } from './creation'
 import type { Personnage } from './personnage'
 import { depuisFicheProto, nomAffiche, normaliser, nouveauPersonnage } from './personnage'
 import type { ChatMessage, Contact, FicheRecue, Groupe, LogLine, Peer, Profile, ReglesMaison, RelayKind, Signalement, TableInfo } from './types'
@@ -48,6 +49,9 @@ export type State = {
   jetOuvert: string | null
   /** Joueur : demandes de jet envoyées au MJ (non conservées) */
   jetsDemandes: Record<string, 'envoye' | 'recu'>
+  /** Création guidée en cours (gardée si l'appli est fermée) */
+  brouillonCreation: Brouillon | null
+  creationOuverte: boolean
   /** Annonce à afficher (ex. pouvoir accordé par le MJ) */
   annonce: { titre: string; texte: string } | null
   /** Dernière dépense de PP, annulable quelques secondes */
@@ -59,7 +63,7 @@ export type State = {
 
 const PERSISTED = [
   'profile', 'personnages', 'actifId', 'pack', 'signalements', 'table', 'contacts', 'messages', 'unread',
-  'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues', 'visiteFaite', 'reglesMaison', 'jetsSecrets',
+  'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues', 'visiteFaite', 'reglesMaison', 'jetsSecrets', 'brouillonCreation',
   'groupes', 'groupesQuittes',
 ] as const
 type PersistedKey = (typeof PERSISTED)[number]
@@ -93,6 +97,8 @@ let state: State = {
   jetsSecrets: [],
   jetOuvert: null,
   jetsDemandes: {},
+  brouillonCreation: null,
+  creationOuverte: false,
   erreurDemarrage: null,
   annonce: null,
   annulation: null,

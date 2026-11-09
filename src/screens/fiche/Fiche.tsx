@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { exporterPerso, importerFichier } from '../../lib/fichiers'
-import type { Camp } from '../../lib/pack'
 import type { Personnage } from '../../lib/personnage'
-import { nomAffiche, nouveauPersonnage } from '../../lib/personnage'
+import { nomAffiche } from '../../lib/personnage'
 import { uid } from '../../lib/storage'
 import { creerPerso, listePersos, majPerso, persoActif, setState, supprimerPerso, useStore } from '../../lib/store'
 import { FilePick, Modal, Seg } from '../../ui'
 import { BoutonJetMJ, BoutonJetSecret } from '../../JetSecret'
+import { ChoixNouveau } from '../../creation/Nouveau'
 import Identite from './Identite'
 import Pouvoirs from './Pouvoirs'
 import Serviteurs from './Serviteurs'
@@ -32,7 +32,7 @@ export default function Fiche() {
         <section className="card stack center">
           <h2>Aucun personnage</h2>
           <p className="muted">Crée ton premier personnage, ou importe-en un depuis un fichier.</p>
-          <NouveauBoutons onDone={() => undefined} />
+          <ChoixNouveau onDone={() => undefined} />
           <FilePick label="Importer un personnage" onFile={(f) => void importerFichier(f).then(setMsg)} />
           {msg && <p className="note-ok">{msg}</p>}
         </section>
@@ -97,7 +97,7 @@ export default function Fiche() {
 
       {creation && (
         <Modal title="Nouveau personnage" onClose={() => setCreation(false)}>
-          <NouveauBoutons onDone={() => setCreation(false)} />
+          <ChoixNouveau onDone={() => setCreation(false)} />
         </Modal>
       )}
 
@@ -143,27 +143,6 @@ export default function Fiche() {
           </div>
         </Modal>
       )}
-    </div>
-  )
-}
-
-function NouveauBoutons({ onDone }: { onDone: () => void }) {
-  const creer = (camp: Camp) => {
-    creerPerso(nouveauPersonnage(camp))
-    onDone()
-  }
-  return (
-    <div className="grid2">
-      <button className="btn big-choice ins" onClick={() => creer('INS')}>
-        😈
-        <span>Démon</span>
-        <small>In Nomine Satanis</small>
-      </button>
-      <button className="btn big-choice mv" onClick={() => creer('MV')}>
-        😇
-        <span>Ange</span>
-        <small>Magna Veritas</small>
-      </button>
     </div>
   )
 }
