@@ -1,27 +1,33 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { StatusPill, UpdatePrompt } from './components'
 import { BandeauAnnulation } from './BoutonPP'
 import { FenetreResultat } from './JetSecret'
 import { ConseilsDemarrage, EcranErreur } from './Erreurs'
-import { SECTION_PAR_ECRAN } from './guide/contenu'
-import Guide from './guide/Guide'
+import { SECTION_PAR_ECRAN } from './guide/ecrans'
 import Visite from './guide/Visite'
-import Assistant from './creation/Assistant'
 import { parseJoin } from './lib/codes'
 import { roleLabel } from './lib/p2p'
 import { log, setState, useStore } from './lib/store'
 import type { TableInfo } from './lib/types'
 import Accueil, { type Onglet } from './screens/Accueil'
 import Fiche from './screens/fiche/Fiche'
-import Messages from './screens/Messages'
-import EspaceMJ from './screens/mj/EspaceMJ'
 import Profil from './screens/Profil'
-import Referentiel from './screens/referentiel/Referentiel'
-import Reglages from './screens/Reglages'
-import Table from './screens/Table'
 import { Modal } from './ui'
 
 type Tab = Onglet
+
+// Écrans chargés seulement à la première ouverture : démarrage plus rapide sur téléphone.
+const Referentiel = lazy(() => import('./screens/referentiel/Referentiel'))
+const Table = lazy(() => import('./screens/Table'))
+const Messages = lazy(() => import('./screens/Messages'))
+const Reglages = lazy(() => import('./screens/Reglages'))
+const EspaceMJ = lazy(() => import('./screens/mj/EspaceMJ'))
+const Guide = lazy(() => import('./guide/Guide'))
+const Assistant = lazy(() => import('./creation/Assistant'))
+
+function Chargement() {
+  return <p className="muted center chargement">Chargement…</p>
+}
 
 function readPendingJoin(): TableInfo | null {
   const info = parseJoin(location.hash)
@@ -84,6 +90,7 @@ export default function App() {
       </header>
 
       <main className="content">
+        <Suspense fallback={<Chargement />}>
         {tab === 'accueil' && <Accueil aller={setTab} />}
         {tab === 'fiche' && <Fiche />}
         {tab === 'referentiel' && <Referentiel />}
@@ -91,6 +98,7 @@ export default function App() {
         {tab === 'messages' && <Messages />}
         {tab === 'mj' && (s.profile.role === 'mj' ? <EspaceMJ /> : <Accueil aller={setTab} />)}
         {tab === 'reglages' && <Reglages />}
+        </Suspense>
       </main>
 
       <nav className="tabbar" data-visite="onglets">
@@ -104,9 +112,14 @@ export default function App() {
 
       {editProfile && <Profil onClose={() => setEditProfile(false)} />}
 
-      {s.creationOuverte && <Assistant onFini={() => setTab('fiche')} />}
+      {s.creationOuverte && (
+        <Suspense fallback={null}>
+          <Assistant onFini={() => setTab('fiche')} />
+        </Suspense>
+      )}
 
       {guide !== null && (
+        <Suspense fallback={null}>
         <Guide
           section={guide || undefined}
           onClose={() => setGuide(null)}
@@ -116,6 +129,7 @@ export default function App() {
             setRevoirVisite(true)
           }}
         />
+        </Suspense>
       )}
 
       {(revoirVisite || !s.visiteFaite) && !editProfile && (

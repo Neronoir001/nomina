@@ -2,8 +2,7 @@
 import type { Camp } from '../lib/pack'
 import { nouveauPersonnage } from '../lib/personnage'
 import { creerPerso, setState, useStore } from '../lib/store'
-import { demarrerCreation } from './Assistant'
-import { profilActif } from './profil'
+import { demarrerCreation, profilActif } from './profil'
 
 export function ChoixNouveau({ onDone }: { onDone: () => void }) {
   const s = useStore()

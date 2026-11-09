@@ -210,7 +210,7 @@ function Thread({ info, onBack }: { info: ConvInfo; onBack: () => void }) {
           setText('')
         }}
       >
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder={g ? `Message au groupe « ${g.nom} »…` : 'Message privé…'} maxLength={2000} />
+        <input value={text} onChange={(e) => setText(e.target.value)} placeholder={g ? `Message au groupe « ${g.nom} »…` : 'Message privé…'} maxLength={2000} enterKeyHint="send" autoCapitalize="sentences" aria-label="Message" />
         <button className="btn btn-primary" type="submit" disabled={!text.trim()}>
           Envoyer
         </button>

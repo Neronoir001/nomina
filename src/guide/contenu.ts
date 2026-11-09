@@ -317,13 +317,4 @@ export const GLOSSAIRE: { terme: string; def: string }[] = [
   { terme: 'Règles maison', def: 'Règles propres à votre table, choisies par le MJ, qui remplacent celles du livre.' },
 ]
 
-/** Section du guide à ouvrir selon l'écran affiché. */
-export const SECTION_PAR_ECRAN: Record<string, string> = {
-  accueil: 'accueil',
-  fiche: 'fiche',
-  referentiel: 'referentiel',
-  table: 'table',
-  messages: 'messages',
-  reglages: 'reglages',
-  mj: 'espace-mj',
-}
+export { SECTION_PAR_ECRAN } from './ecrans'

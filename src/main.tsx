@@ -4,6 +4,8 @@ import App from './App'
 import { GardeErreur } from './Erreurs'
 import './styles.css'
 import './styles-fiche.css'
+import './styles-mobile.css'
+import { installerClavier } from './lib/clavier'
 import { initInstallCapture } from './lib/install'
 import { installerInfobulles } from './lib/infobulles'
 import { resumeIfNeeded } from './lib/p2p'
@@ -11,6 +13,7 @@ import { flush, initStore, log } from './lib/store'
 
 initInstallCapture()
 installerInfobulles()
+installerClavier()
 
 // Demande au système de ne pas effacer les données de l'appli (accepté d'office pour une appli installée).
 void navigator.storage?.persist?.().catch(() => undefined)

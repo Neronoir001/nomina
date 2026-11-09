@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import QRCode from 'qrcode'
-import QrScanner from 'qr-scanner'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { parseJoin } from './lib/codes'
 import { canPromptInstall, isAndroid, isIOS, isStandalone, onInstallChange, promptInstall } from './lib/install'
@@ -13,7 +11,10 @@ export function QrImage({ text, label }: { text: string; label: string }) {
   const [src, setSrc] = useState('')
   useEffect(() => {
     let alive = true
-    QRCode.toDataURL(text, { margin: 1, width: 640, errorCorrectionLevel: 'M', color: { dark: '#141012', light: '#ffffff' } })
+    // Bibliothèque chargée à la demande (seulement quand un QR code est affiché).
+    import('qrcode')
+      .then(({ default: QRCode }) => QRCode.toDataURL(text, { margin: 1, width: 640, errorCorrectionLevel: 'M', color: { dark: '#141012', light: '#ffffff' } })
+      )
       .then((url) => alive && setSrc(url))
       .catch(() => alive && setSrc(''))
     return () => {
@@ -39,7 +40,11 @@ export function QrScanModal({ onResult, onClose }: { onResult: (t: TableInfo) =>
     const v = videoRef.current
     if (!v) return
     let done = false
-    const scanner = new QrScanner(
+    let scanner: import('qr-scanner').default | null = null
+    let arrete = false
+    void import('qr-scanner').then(({ default: QrScanner }) => {
+      if (arrete) return
+      scanner = new QrScanner(
       v,
       (res) => {
         if (done) return
@@ -53,17 +58,19 @@ export function QrScanModal({ onResult, onClose }: { onResult: (t: TableInfo) =>
       },
       { returnDetailedScanResult: true, highlightScanRegion: true, preferredCamera: 'environment' },
     )
-    scanner.start().catch((e: unknown) => {
+      scanner.start().catch((e: unknown) => {
       const msg = String(e)
       setErr(
         /NotAllowed|Permission|denied/i.test(msg)
           ? "L'accès à la caméra a été refusé. Autorise la caméra pour Nomina dans les réglages, ou saisis le code à la main."
           : "Impossible d'ouvrir la caméra sur cet appareil. Saisis le code de la table à la main.",
       )
+      })
     })
     return () => {
-      scanner.stop()
-      scanner.destroy()
+      arrete = true
+      scanner?.stop()
+      scanner?.destroy()
     }
   }, [])
 

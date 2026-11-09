@@ -44,6 +44,16 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.12.0',
+    date: '10 novembre 2026',
+    points: [
+      'Téléphone : plus de zoom intempestif sur iPhone quand on touche un champ, et des boutons plus grands, plus faciles à toucher (ⓘ, ⚡, lignes dépliables…).',
+      'Quand le clavier s’ouvre, la barre d’onglets du bas se cache pour laisser voir ce que tu écris.',
+      'Les fenêtres s’ouvrent en bas de l’écran, à portée de pouce. Sur petit écran, les lignes de pouvoirs et de serviteurs passent sur deux lignes au lieu de déborder.',
+      'Démarrage plus rapide : l’appli charge un tiers de données en moins au lancement.',
+    ],
+  },
+  {
     version: '0.11.0',
     date: '9 novembre 2026',
     points: [

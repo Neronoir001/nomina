@@ -2,16 +2,15 @@
 import { useEffect, useRef } from 'react'
 import type { Brouillon, ChoixPouvoir } from '../lib/creation'
 import {
-  CARACS_ORDRE, construirePersonnage, coutTalent, d6, d66, d666, dansPlage, ETAPES, limitationsDu, nouveauBrouillon, plafondTalent,
+  CARACS_ORDRE, construirePersonnage, coutTalent, d6, d66, d666, dansPlage, ETAPES, limitationsDu, plafondTalent,
   pointsCaracs, pointsTalents, privilegies, problemes, tableGenerale,
 } from '../lib/creation'
-import type { Camp, Pack, PouvoirRef } from '../lib/pack'
+import type { Pack, PouvoirRef } from '../lib/pack'
 import { CARAC_ABBR, CARAC_LABEL, caracLabel, CATEGORIES } from '../lib/pack'
 import { uid } from '../lib/storage'
 import { creerPerso, getState, setState, useStore } from '../lib/store'
 import { FicheLimitation, FichePouvoir } from '../screens/referentiel/Details'
 import { Card, Choix, Empty, Field, Info, Stepper } from '../ui'
-import { profilActif } from './profil'
 
 function majB(f: (b: Brouillon) => Brouillon): void {
   const b = getState().brouillonCreation
@@ -577,15 +576,4 @@ function Ligne({ t, v }: { t: string; v: string }) {
       <dd>{v}</dd>
     </div>
   )
-}
-
-// ───────── Démarrer ─────────
-
-export function demarrerCreation(camp: Camp): void {
-  const cur = getState().brouillonCreation
-  if (cur && !confirm('Une création est déjà en cours. La remplacer par une nouvelle ?')) {
-    setState({ creationOuverte: true })
-    return
-  }
-  setState({ brouillonCreation: nouveauBrouillon(camp, profilActif()), creationOuverte: true })
 }

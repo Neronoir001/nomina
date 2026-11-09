@@ -1,0 +1,84 @@
+/* ═════════ Confort sur téléphone et tablette (écrans tactiles) ═════════
+   Chargé en dernier : ces règles priment sur les deux autres feuilles. */
+
+/* Pas de délai ni de zoom au double-toucher sur les commandes. */
+button, a, summary, select, label, .tab, .choix-btn { touch-action: manipulation; }
+
+@media (pointer: coarse) {
+  /* iPhone zoome tout l'écran sur un champ dont le texte fait moins de 16 px : on l'évite. */
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea,
+  .mini { font-size: 16px; }
+  select.mini { padding-left: 0; padding-right: 0; text-align-last: center; }
+
+  /* Zones tactiles d'au moins 40 px (recommandation Apple et Google : 44 / 48). */
+  .btn, .btn-small, .chip-btn, .choix-btn { min-height: 42px; }
+  .icon-btn { min-width: 40px; min-height: 40px; }
+  .link { min-height: 40px; padding: .45rem 0; }
+  .btn-pp.compact { min-height: 40px; min-width: 52px; font-size: .9rem; }
+
+  /* Le petit « ⓘ » garde son allure mais sa zone de toucher grandit. */
+  .info-btn {
+    position: relative; min-width: 32px; min-height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .info-btn::after { content: ''; position: absolute; inset: -6px; }
+  .serv-row .info-btn { width: 28px; min-width: 28px; }
+  .serv-row .btn-pp.compact { min-width: 44px; padding-left: .3rem; padding-right: .3rem; }
+  .serv-row { gap: .3rem; }
+
+  /* Lignes dépliables (référentiel, fiches reçues, séances, PNJ, FAQ…). */
+  details > summary { min-height: 44px; padding-top: .35rem; padding-bottom: .35rem; }
+  .ref-item summary { align-items: center; }
+  .sup-details summary { display: flex; align-items: center; }
+
+  /* Cases à cocher plus faciles à atteindre. */
+  input[type='checkbox'], input[type='radio'] { width: 22px; height: 22px; }
+
+  /* Onglets segmentés : hauteur confortable. */
+  .seg button { min-height: 42px; }
+}
+
+/* ───── Barre du haut sur petit écran ───── */
+@media (max-width: 420px) {
+  .topbar { gap: .35rem; padding-left: 12px; padding-right: 12px; }
+  .brand span { display: none; }               /* le logo suffit, le nom laisse la place au profil */
+  .chip { max-width: none; flex: 1 1 auto; min-width: 0; min-height: 36px; }
+  .brand { min-width: 40px; min-height: 40px; }
+  .topbar .pill { flex: none; }
+  .content { padding-left: 12px; padding-right: 12px; }
+  .card { padding: 14px 12px; }
+}
+
+/* ───── Clavier ouvert : la barre d'onglets se cache pour libérer l'écran ───── */
+body.clavier-ouvert .tabbar { display: none; }
+body.clavier-ouvert .content { padding-bottom: calc(env(safe-area-inset-bottom) + 24px); }
+body.clavier-ouvert .composer { bottom: 8px; }
+
+/* ───── Fenêtres : en bas de l'écran, à portée de pouce ───── */
+@media (max-width: 600px) {
+  .modal { place-items: end center; padding: 0; }
+  .modal-box {
+    max-width: none; border-radius: 18px 18px 0 0; border-bottom: 0;
+    max-height: 90dvh; padding: 16px 16px calc(env(safe-area-inset-bottom) + 16px);
+    animation: monter .18s ease-out;
+  }
+  .modal-head { position: sticky; top: -16px; z-index: 1; background: var(--panel); margin: -16px -16px 0; padding: 14px 16px 8px; }
+}
+@keyframes monter { from { transform: translateY(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .modal-box { animation: none; } }
+
+/* Défilement fluide et sans rebond parasite dans les zones qui défilent. */
+.guide-corps, .modal-box, .table-um-wrap { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+
+/* ───── Lignes de saisie de la fiche sur écran étroit ─────
+   Le nom prend toute la largeur ; niveaux, étiquettes et boutons passent à la ligne en dessous. */
+@media (max-width: 420px) {
+  .pouvoir-row > .row, .serv-row, .lim-row, .recup-row { flex-wrap: wrap; row-gap: .35rem; }
+  .pouvoir-row > .row > .pouvoir-nom,
+  .serv-row > .grow, .lim-row > .grow, .recup-row > .grow { flex: 1 1 100%; min-width: 0; }
+  .pouvoir-row > .row > .icon-btn:last-child,
+  .serv-row > .icon-btn:last-child, .lim-row > .icon-btn:last-child, .recup-row > .icon-btn:last-child { margin-left: auto; }
+}
+@media (pointer: coarse) { .mini { min-height: 40px; } }
