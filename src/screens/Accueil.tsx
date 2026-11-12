@@ -5,10 +5,10 @@ import { newTable } from '../lib/codes'
 import { exporterTout, importerFichier } from '../lib/fichiers'
 import { isStandalone } from '../lib/install'
 import { appliquerMaj, ecouterMaj, majDisponible } from '../lib/maj'
-import { joinTable, joueurPeerIds, roleLabel, sendReferentiel } from '../lib/p2p'
+import { demanderReferentiel, joinTable, joueurPeerIds, mjPeerIds, roleLabel, sendReferentiel } from '../lib/p2p'
 import type { Personnage } from '../lib/personnage'
 import { nomAffiche } from '../lib/personnage'
-import { getState, heure, listePersos, majPerso, setState, useStore } from '../lib/store'
+import { getState, heure, installerPackPropose, listePersos, majPerso, setState, useStore } from '../lib/store'
 import { Card, FilePick, Modal, Stepper } from '../ui'
 import { ChoixNouveau } from '../creation/Nouveau'
 import { BoutonPP } from '../BoutonPP'
@@ -57,7 +57,7 @@ function AFaire({ aller }: { aller: (o: Onglet) => void }) {
   const sauvegardeAFaire = nb > 0 && (ageSauvegarde === null || ageSauvegarde >= 7)
   const installer = !isStandalone()
 
-  if (!maj && s.pack && !sauvegardeAFaire && !installer && !msg) return null
+  if (!maj && s.pack && !s.packPropose && !sauvegardeAFaire && !installer && !msg) return null
 
   return (
     <Card title="⚠ À faire" className="a-faire">
@@ -70,13 +70,30 @@ function AFaire({ aller }: { aller: (o: Onglet) => void }) {
             </button>
           </li>
         )}
-        {!s.pack && (
+        {s.packPropose && (
+          <li>
+            <span>
+              {s.packPropose.de} t'a envoyé le référentiel « {s.packPropose.pack.titre} » (version {s.packPropose.pack.version}).
+            </span>
+            <button className="btn btn-primary" onClick={installerPackPropose}>
+              Installer
+            </button>
+          </li>
+        )}
+        {!s.pack && !s.packPropose && (
           <li>
             <span>
               Le référentiel (princes, pouvoirs, talents…) n'est pas installé.
               {s.profile?.role === 'joueur' && ' Tu le recevras en rejoignant la Table de ton MJ.'}
             </span>
-            <FilePick label="Importer le fichier" onFile={(f) => void importerFichier(f).then(setMsg)} />
+            <div className="row">
+              {s.profile?.role === 'joueur' && mjPeerIds().length > 0 && (
+                <button className="btn btn-primary" onClick={() => void demanderReferentiel().then(() => setMsg('Référentiel demandé au MJ : il arrive dans quelques secondes.'))}>
+                  📥 Le demander au MJ
+                </button>
+              )}
+              <FilePick label="Importer le fichier" onFile={(f) => void importerFichier(f).then(setMsg)} />
+            </div>
           </li>
         )}
         {sauvegardeAFaire && (

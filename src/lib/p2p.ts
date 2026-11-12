@@ -17,7 +17,8 @@ import { nouveauJet } from './jets'
 const APP_ID = 'nomina-insmv'
 
 type RelayModule = { joinRoom: JoinRoom; getRelaySockets?: () => unknown }
-type Hello = { deviceId: string; name: string; role: Role; version: string }
+type VersionPack = { version: string; date: string }
+type Hello = { deviceId: string; name: string; role: Role; version: string; pack?: VersionPack | null }
 type MsgPayload = { id: string; text: string; at: number; from: string; conv?: string; groupe?: Groupe }
 
 type Actions = {
@@ -28,6 +29,7 @@ type Actions = {
   sheetAck: MessageAction<JsonValue>
   ref: MessageAction<JsonValue>
   refAck: MessageAction<JsonValue>
+  refReq: MessageAction<JsonValue>
   grp: MessageAction<JsonValue>
   grpQuit: MessageAction<JsonValue>
   accord: MessageAction<JsonValue>
@@ -61,7 +63,9 @@ function me(): Profile {
 
 function myHello(): Hello {
   const p = me()
-  return { deviceId: p.deviceId, name: p.name, role: p.role, version: __APP_VERSION__ }
+  // Version du référentiel installé, ou déjà reçu et en attente d'installation : inutile de le renvoyer.
+  const pk = getState().pack ?? getState().packPropose?.pack
+  return { deviceId: p.deviceId, name: p.name, role: p.role, version: __APP_VERSION__, pack: pk ? { version: pk.version, date: pk.date } : null }
 }
 
 export function roleLabel(r?: Role): string {
@@ -165,6 +169,7 @@ function makeActions(r: Room): Actions {
     sheetAck: r.makeAction<JsonValue>('sheet-ack'),
     ref: r.makeAction<JsonValue>('referentiel'),
     refAck: r.makeAction<JsonValue>('ref-ack'),
+    refReq: r.makeAction<JsonValue>('ref-req'),
     grp: r.makeAction<JsonValue>('grp'),
     grpQuit: r.makeAction<JsonValue>('grp-quit'),
     accord: r.makeAction<JsonValue>('accord'),
@@ -306,21 +311,33 @@ function makeActions(r: Room): Actions {
     setState({ transfer: null })
     if (!isPack(d)) {
       log('Référentiel reçu illisible.', 'erreur')
+      void a.refAck.send({ ok: false }, { target: peerId })
       return
     }
     const pack = d as unknown as Pack
+    // Accusé de réception d'abord : le MJ arrête ses relances.
+    void a.refAck.send({ ok: true, version: pack.version }, { target: peerId })
     const cur = getState().pack
     if (cur && cur.version === pack.version && cur.date === pack.date) {
       log(`Référentiel « ${pack.titre} » déjà à jour.`)
     } else {
+      // Conservé même si l'appli est fermée avant d'avoir répondu (voir « À faire » à l'accueil).
       setState({ packPropose: { pack, de: peerName(peerId) } })
       log(`Le MJ propose le référentiel « ${pack.titre} » (version ${pack.version}).`, 'ok')
     }
-    void a.refAck.send({ version: pack.version }, { target: peerId })
   }
 
-  a.refAck.onMessage = (_d, { peerId }) => {
-    log(`Référentiel bien reçu par ${peerName(peerId)}.`, 'ok')
+  a.refAck.onMessage = (d, { peerId }) => {
+    envoisRef.delete(peerId)
+    if ((d as { ok?: boolean })?.ok === false) log(`${peerName(peerId)} n'a pas pu lire le référentiel.`, 'erreur')
+    else log(`Référentiel bien reçu par ${peerName(peerId)}.`, 'ok')
+  }
+
+  // Un joueur réclame le référentiel (il n'en a pas, ou la proposition s'est perdue)
+  a.refReq.onMessage = (_d, { peerId }) => {
+    if (me().role !== 'mj' || !getState().pack) return
+    log(`${peerName(peerId)} demande le référentiel.`)
+    envoyerReferentielA(peerId, 1)
   }
 
   return a
@@ -349,8 +366,14 @@ function onHello(h: Hello, peerId: string): void {
   }
   // Un joueur envoie automatiquement sa fiche au MJ
   if (me().role === 'joueur' && h.role === 'mj') void sendSheet([peerId])
-  // Le MJ envoie automatiquement son référentiel aux joueurs
-  if (me().role === 'mj' && h.role === 'joueur' && getState().pack) void sendReferentiel([peerId])
+  // Le MJ envoie son référentiel aux joueurs qui n'en ont pas, ou une autre version
+  const pk = getState().pack
+  if (me().role === 'mj' && h.role === 'joueur' && pk) {
+    if (h.pack && h.pack.version === pk.version && h.pack.date === pk.date) log(`${h.name} a déjà le référentiel à jour.`)
+    else envoyerReferentielA(peerId, 1)
+  }
+  // Le joueur sans référentiel le réclame lui-même s'il n'arrive pas (secours si l'envoi s'est perdu)
+  if (me().role === 'joueur' && h.role === 'mj') surveillerArriveeReferentiel(peerId)
   // … et ses règles maison
   const rm = getState().reglesMaison
   if (me().role === 'mj' && h.role === 'joueur' && rm) void A?.regles.send(rm as unknown as JsonValue, { target: peerId })
@@ -548,18 +571,64 @@ export function joueurPeerIds(): string[] {
 }
 
 export async function sendReferentiel(targets = joueurPeerIds()): Promise<void> {
+  for (const t of targets) envoyerReferentielA(t, 1)
+}
+
+const RELANCE_REF_MS = 45_000
+const ESSAIS_REF = 3
+/** Envois de référentiel en attente d'accusé de réception, par appareil. */
+const envoisRef = new Map<string, number>()
+
+/** MJ : envoie le référentiel à un joueur, et le renvoie s'il n'en accuse pas réception. */
+function envoyerReferentielA(peerId: string, essai: number): void {
   const pack = getState().pack
-  if (!A || !pack || targets.length === 0) return
+  if (!A || !pack) return
+  const ko = Math.round(JSON.stringify(pack).length / 1024)
   setState({ transfer: { label: 'Envoi du référentiel', percent: 0 } })
-  log(`Envoi du référentiel à ${targets.length} joueur(s)…`)
-  try {
-    await A.ref.send(pack as unknown as JsonValue, {
-      target: targets,
+  log(`Envoi du référentiel à ${peerName(peerId)} (${ko} Ko${essai > 1 ? `, essai ${essai}` : ''})…`)
+  window.clearTimeout(envoisRef.get(peerId))
+  envoisRef.set(
+    peerId,
+    window.setTimeout(() => {
+      if (!envoisRef.has(peerId) || !getState().peers[peerId]) return envoisRef.delete(peerId) && undefined
+      if (essai >= ESSAIS_REF) {
+        envoisRef.delete(peerId)
+        log(`${peerName(peerId)} n'a pas confirmé la réception du référentiel. Utilise « Partager le fichier du référentiel » (Réglages).`, 'erreur')
+        return
+      }
+      envoyerReferentielA(peerId, essai + 1)
+    }, RELANCE_REF_MS),
+  )
+  A.ref
+    .send(pack as unknown as JsonValue, {
+      target: peerId,
       onProgress: (p) => setState({ transfer: { label: 'Envoi du référentiel', percent: pct(p) } }),
     })
-  } finally {
-    setState({ transfer: null })
-  }
+    .catch((e: unknown) => log(`Échec de l'envoi du référentiel à ${peerName(peerId)} : ${String(e)}`, 'erreur'))
+    .finally(() => setState({ transfer: null }))
+}
+
+const ATTENTE_REF_MS = 20_000
+let minuteurAttenteRef: number | undefined
+
+/** Joueur : si, après la connexion au MJ, aucun référentiel n'est arrivé, on le réclame. */
+function surveillerArriveeReferentiel(peerMj: string): void {
+  window.clearTimeout(minuteurAttenteRef)
+  minuteurAttenteRef = window.setTimeout(() => {
+    const s = getState()
+    if (s.pack || s.packPropose || s.transfer || !s.peers[peerMj]) return
+    log("Le référentiel n'est pas arrivé : demande au MJ…")
+    void demanderReferentiel()
+  }, ATTENTE_REF_MS)
+}
+
+/** Joueur : demande le référentiel au(x) MJ connecté(s). Renvoie false si aucun MJ n'est là. */
+export async function demanderReferentiel(): Promise<boolean> {
+  const cibles = mjPeerIds()
+  if (!A || cibles.length === 0) return false
+  await A.refReq.send({ at: Date.now() }, { target: cibles })
+  log('Référentiel demandé au MJ.')
+  return true
 }
 
 // ───────────────────────── Diagnostic ─────────────────────────

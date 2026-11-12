@@ -63,7 +63,7 @@ export type State = {
 
 const PERSISTED = [
   'profile', 'personnages', 'actifId', 'pack', 'signalements', 'table', 'contacts', 'messages', 'unread',
-  'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues', 'visiteFaite', 'reglesMaison', 'jetsSecrets', 'brouillonCreation',
+  'fichesRecues', 'sheetAckAt', 'preferredRelay', 'derniereSauvegarde', 'nouveautesVues', 'visiteFaite', 'reglesMaison', 'jetsSecrets', 'brouillonCreation', 'packPropose',
   'groupes', 'groupesQuittes',
 ] as const
 type PersistedKey = (typeof PERSISTED)[number]
@@ -155,6 +155,14 @@ export function subscribe(l: () => void): () => void {
 
 export function useStore(): State {
   return useSyncExternalStore(subscribe, getState, getState)
+}
+
+/** Installe le référentiel reçu du MJ (proposition en attente). */
+export function installerPackPropose(): void {
+  const prop = state.packPropose
+  if (!prop) return
+  setState({ pack: prop.pack, packPropose: null })
+  log(`Référentiel « ${prop.pack.titre} » v${prop.pack.version} installé.`, 'ok')
 }
 
 export function log(text: string, level: LogLine['level'] = 'info'): void {

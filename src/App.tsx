@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { StatusPill, UpdatePrompt } from './components'
 import { BandeauAnnulation } from './BoutonPP'
 import { FenetreResultat } from './JetSecret'
@@ -7,7 +7,7 @@ import { SECTION_PAR_ECRAN } from './guide/ecrans'
 import Visite from './guide/Visite'
 import { parseJoin } from './lib/codes'
 import { roleLabel } from './lib/p2p'
-import { log, setState, useStore } from './lib/store'
+import { installerPackPropose, setState, useStore } from './lib/store'
 import type { TableInfo } from './lib/types'
 import Accueil, { type Onglet } from './screens/Accueil'
 import Fiche from './screens/fiche/Fiche'
@@ -42,6 +42,10 @@ export default function App() {
   const [editProfile, setEditProfile] = useState(false)
   const [guide, setGuide] = useState<string | null>(null)
   const [revoirVisite, setRevoirVisite] = useState(false)
+  // Fermer la fenêtre (✕) garde la proposition : elle reste installable depuis l'accueil et la Table.
+  const [refMasque, setRefMasque] = useState(false)
+  const propositionRef = s.packPropose ? `${s.packPropose.pack.version}|${s.packPropose.pack.date}` : ''
+  useEffect(() => setRefMasque(false), [propositionRef])
 
   // La vérification des mises à jour tourne dès le premier écran.
   if (!s.hydrated) {
@@ -132,7 +136,7 @@ export default function App() {
         </Suspense>
       )}
 
-      {(revoirVisite || !s.visiteFaite) && !editProfile && (
+      {(revoirVisite || !s.visiteFaite) && !editProfile && !(s.packPropose && !refMasque) && !s.annonce && (
         <Visite
           onFin={() => {
             setRevoirVisite(false)
@@ -152,8 +156,8 @@ export default function App() {
         </Modal>
       )}
 
-      {s.packPropose && (
-        <Modal title="Référentiel proposé" onClose={() => setState({ packPropose: null })}>
+      {s.packPropose && !refMasque && (
+        <Modal title="Référentiel proposé" onClose={() => setRefMasque(true)}>
           <div className="stack">
             <p>
               {s.packPropose.de} t'envoie le référentiel <b>« {s.packPropose.pack.titre} »</b> (version {s.packPropose.pack.version}).
@@ -166,16 +170,12 @@ export default function App() {
             <div className="row">
               <button
                 className="btn btn-primary"
-                onClick={() => {
-                  const pack = s.packPropose!.pack
-                  setState({ pack, packPropose: null })
-                  log(`Référentiel « ${pack.titre} » v${pack.version} installé.`, 'ok')
-                }}
+                onClick={installerPackPropose}
               >
                 Installer
               </button>
               <button className="btn" onClick={() => setState({ packPropose: null })}>
-                Plus tard
+                Refuser
               </button>
             </div>
           </div>

@@ -1,7 +1,7 @@
 {
   "name": "nomina",
   "private": true,
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "Nomina — fiches de personnages INS/MV 3e édition",
   "type": "module",
   "scripts": {

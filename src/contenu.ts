@@ -44,6 +44,15 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.12.1',
+    date: '12 novembre 2026',
+    points: [
+      'Référentiel : envoi plus fiable vers les téléphones. Le MJ le renvoie si le joueur n’en accuse pas réception, et le joueur le redemande tout seul s’il n’arrive pas.',
+      'Nouveau bouton « 📥 Demander le référentiel au MJ » (onglet Table et accueil). Une proposition fermée par erreur reste installable depuis « À faire ».',
+      'Le MJ n’envoie plus le référentiel à un joueur qui a déjà la même version.',
+    ],
+  },
+  {
     version: '0.12.0',
     date: '10 novembre 2026',
     points: [

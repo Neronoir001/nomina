@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { QrImage, QrScanModal } from '../components'
 import { appUrl, joinUrl, newTable, parseJoin } from '../lib/codes'
-import { accorderPouvoir, joinTable, joueurPeerIds, leaveTable, mjPeerIds, peerIdFor, roleLabel, sendReferentiel, sendSheet } from '../lib/p2p'
+import { accorderPouvoir, demanderReferentiel, joinTable, joueurPeerIds, leaveTable, mjPeerIds, peerIdFor, roleLabel, sendReferentiel, sendSheet } from '../lib/p2p'
 import { nomAffiche } from '../lib/personnage'
-import { heure, persoActif, setState, useStore } from '../lib/store'
+import { heure, installerPackPropose, persoActif, setState, useStore } from '../lib/store'
 import type { FicheRecue, RelayKind, TableInfo } from '../lib/types'
 import { Chooser } from './fiche/Pouvoirs'
 import PersoResume from './PersoResume'
@@ -183,7 +183,38 @@ function PlayerTools() {
   const s = useStore()
   const mj = mjPeerIds().length > 0
   const perso = persoActif(s)
+  const [demande, setDemande] = useState(false)
   return (
+    <>
+    <section className="card stack">
+      <h3>Référentiel</h3>
+      {s.packPropose ? (
+        <>
+          <p className="small">
+            {s.packPropose.de} t'a envoyé « {s.packPropose.pack.titre} » (version {s.packPropose.pack.version}).
+          </p>
+          <button className="btn btn-primary" onClick={installerPackPropose}>
+            Installer le référentiel
+          </button>
+        </>
+      ) : (
+        <p className="muted small">
+          {s.pack ? `Installé : « ${s.pack.titre} », version ${s.pack.version}.` : "Pas encore installé : il arrive tout seul quelques secondes après la connexion au MJ."}
+        </p>
+      )}
+      {!s.packPropose && (
+        <button
+          className="btn"
+          disabled={!mj || !!s.transfer}
+          onClick={() => void demanderReferentiel().then((ok) => setDemande(ok))}
+          title={mj ? '' : 'Le MJ doit être connecté à la table'}
+        >
+          📥 {s.pack ? 'Redemander le référentiel au MJ' : 'Demander le référentiel au MJ'}
+        </button>
+      )}
+      {demande && !s.packPropose && !s.transfer && <p className="muted small">Demande envoyée : le référentiel arrive dans quelques secondes.</p>}
+      <Progress />
+    </section>
     <section className="card stack">
       <h3>Ma fiche</h3>
       <p className="muted small">
@@ -193,8 +224,8 @@ function PlayerTools() {
       <button className="btn" disabled={!mj || !perso} onClick={() => void sendSheet()}>
         Renvoyer ma fiche maintenant
       </button>
-      <Progress />
     </section>
+    </>
   )
 }
 
