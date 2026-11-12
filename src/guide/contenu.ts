@@ -161,6 +161,9 @@ Les compteurs **PP actuels** et **PP max** restent toujours modifiables à la ma
 - Le **référentiel** du MJ t'est proposé si le tien est différent.
 - L'appli se **reconnecte** toute seule à la dernière table à l'ouverture.
 
+## Liaisons entre appareils
+Il n'y a pas de serveur : chaque appareil se relie **directement à chacun des autres**. Si une liaison ne s'établit pas (autre réseau, VPN, pare-feu), un encadré **⚠ Pas reliés à cet appareil** l'indique (onglet Table, accueil, Messages), avec la personne concernée et qui la voit. Touche **🔄 Réessayer** après avoir corrigé le réseau. En attendant, tu peux déjà lui écrire : le message partira dès que la liaison sera établie.
+
 ## Conseils
 - Tout le monde sur le **même Wi-Fi** ; à défaut, un partage de connexion depuis un téléphone.
 - La mise en relation a besoin d'internet quelques secondes (Wi-Fi ou 4G).
@@ -279,6 +282,7 @@ Création guidée selon tes règles, validation des fiches.`,
 
 export const FAQ: { q: string; r: string }[] = [
   { q: "L'appli ne trouve pas la Table du MJ.", r: "Vérifie que tout le monde a internet et est sur le même Wi-Fi, puis réessaie. Si ça bloque encore, le MJ peut ouvrir une nouvelle table avec un autre type de relais (MQTT ou BitTorrent), et ⚙️ → Diagnostic donne des indices." },
+  { q: 'Je vois un joueur sur un appareil mais pas sur un autre.', r: "Les appareils se relient deux à deux, sans serveur : la liaison entre ces deux-là n'a pas pu s'établir. L'encadré « ⚠ Pas reliés à cet appareil » le confirme. Mettez-les sur le même Wi-Fi, coupez un éventuel VPN, vérifiez le pare-feu du PC, puis touchez « 🔄 Réessayer »." },
   { q: 'Le scanner de QR code ne s’ouvre pas.', r: "Autorise la caméra pour Nomina dans les réglages du téléphone, ou utilise « Saisir le code à la main » avec le code et la clé affichés sous le QR du MJ." },
   { q: 'Je ne reçois pas le référentiel du MJ.', r: "Il arrive tout seul quelques secondes après la connexion à la Table ; s'il tarde, l'appli le redemande d'elle-même. Tu peux aussi toucher « 📥 Demander le référentiel au MJ » (onglet Table ou accueil). Si tu avais fermé la fenêtre, le bouton « Installer » t'attend dans « À faire » à l'accueil. En dernier recours, le MJ peut t'envoyer le fichier (⚙️ → Partager le fichier du référentiel)." },
   { q: 'Je ne vois ni princes, ni pouvoirs, ni listes.', r: "Le référentiel n'est pas installé : rejoins la Table de ton MJ (il te sera proposé) ou importe le fichier dans ⚙️ → Référentiel." },

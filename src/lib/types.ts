@@ -27,6 +27,9 @@ export type Peer = {
   ping?: number
 }
 
+/** Un appareil vu par un autre appareil de la table. */
+export type VuALaTable = { deviceId: string; name: string; role: Role }
+
 export type Contact = {
   deviceId: string
   name: string

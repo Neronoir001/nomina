@@ -9,7 +9,7 @@ import { isPack } from './pack'
 import type { Personnage } from './personnage'
 import { nomAffiche, normaliser, nouveauPouvoir } from './personnage'
 import { majPerso, persoActif, subscribe } from './store'
-import type { ChatMessage, Groupe, Peer, Profile, ReglesMaison, RelayKind, Role, TableInfo } from './types'
+import type { ChatMessage, Groupe, Peer, Profile, ReglesMaison, RelayKind, Role, TableInfo, VuALaTable } from './types'
 import { RELAYS } from './types'
 import type { DemandeJet, JetSecret } from './jets'
 import { nouveauJet } from './jets'
@@ -30,6 +30,7 @@ type Actions = {
   ref: MessageAction<JsonValue>
   refAck: MessageAction<JsonValue>
   refReq: MessageAction<JsonValue>
+  annuaire: MessageAction<JsonValue>
   grp: MessageAction<JsonValue>
   grpQuit: MessageAction<JsonValue>
   accord: MessageAction<JsonValue>
@@ -118,8 +119,11 @@ export async function joinTable(info: TableInfo): Promise<void> {
         delete peers[peerId]
         const contacts = { ...s.contacts }
         if (p?.deviceId && contacts[p.deviceId]) contacts[p.deviceId] = { ...contacts[p.deviceId], lastSeen: Date.now() }
-        return { peers, contacts }
+        const annuaires = { ...s.annuaires }
+        delete annuaires[peerId]
+        return { peers, contacts, annuaires }
       })
+      diffuserAnnuaire()
     }
     setState({ status: 'connecte' })
     log('Table ouverte. En attente des autres appareils…', 'ok')
@@ -145,7 +149,7 @@ export async function leaveTable(forget = true): Promise<void> {
       /* ignoré */
     }
   }
-  setState({ status: 'deconnecte', peers: {}, relaysOpen: 0, relaysTotal: 0, transfer: null, ...(forget ? { table: null } : {}) })
+  setState({ status: 'deconnecte', peers: {}, annuaires: {}, relaysOpen: 0, relaysTotal: 0, transfer: null, ...(forget ? { table: null } : {}) })
   if (forget) log('Table quittée.')
 }
 
@@ -170,6 +174,7 @@ function makeActions(r: Room): Actions {
     ref: r.makeAction<JsonValue>('referentiel'),
     refAck: r.makeAction<JsonValue>('ref-ack'),
     refReq: r.makeAction<JsonValue>('ref-req'),
+    annuaire: r.makeAction<JsonValue>('annuaire'),
     grp: r.makeAction<JsonValue>('grp'),
     grpQuit: r.makeAction<JsonValue>('grp-quit'),
     accord: r.makeAction<JsonValue>('accord'),
@@ -333,6 +338,17 @@ function makeActions(r: Room): Actions {
     else log(`Référentiel bien reçu par ${peerName(peerId)}.`, 'ok')
   }
 
+  // Liste des appareils auxquels un autre appareil est relié (noms et rôles seulement)
+  a.annuaire.onMessage = (d, { peerId }) => {
+    const liste = (d as { liste?: VuALaTable[] })?.liste
+    if (!Array.isArray(liste)) return
+    const propre = liste
+      .filter((x) => x && typeof x.deviceId === 'string' && typeof x.name === 'string')
+      .map((x) => ({ deviceId: x.deviceId, name: x.name.slice(0, 60), role: x.role === 'mj' ? 'mj' : 'joueur' }) as VuALaTable)
+      .slice(0, 50)
+    setState((s) => ({ annuaires: { ...s.annuaires, [peerId]: propre } }))
+  }
+
   // Un joueur réclame le référentiel (il n'en a pas, ou la proposition s'est perdue)
   a.refReq.onMessage = (_d, { peerId }) => {
     if (me().role !== 'mj' || !getState().pack) return
@@ -355,6 +371,7 @@ function onHello(h: Hello, peerId: string): void {
     }
   })
   log(`${h.name} (${roleLabel(h.role)}) est connecté.`, 'ok')
+  diffuserAnnuaire()
 
   // Groupes dont il fait partie, puis messages en attente pour lui
   for (const g of Object.values(getState().groupes)) {
@@ -629,6 +646,50 @@ export async function demanderReferentiel(): Promise<boolean> {
   await A.refReq.send({ at: Date.now() }, { target: cibles })
   log('Référentiel demandé au MJ.')
   return true
+}
+
+// ───────────────────────── Liaisons manquantes ─────────────────────────
+
+let minuteurAnnuaire: number | undefined
+/** Envoie à tous les appareils reliés la liste des appareils auxquels celui-ci est relié. */
+function diffuserAnnuaire(): void {
+  window.clearTimeout(minuteurAnnuaire)
+  minuteurAnnuaire = window.setTimeout(() => {
+    if (!A) return
+    const liste: VuALaTable[] = Object.values(getState().peers)
+      .filter((p) => p.deviceId && p.name && p.role)
+      .map((p) => ({ deviceId: p.deviceId!, name: p.name!, role: p.role! }))
+    const cibles = Object.keys(getState().peers)
+    if (cibles.length) void A.annuaire.send({ liste } as unknown as JsonValue, { target: cibles }).catch(() => undefined)
+  }, 800)
+}
+
+export type NonRelie = VuALaTable & { via: string[] }
+
+/** Appareils présents à la table (vus par d'autres) mais pas reliés directement à celui-ci. */
+export function nonRelies(s = getState()): NonRelie[] {
+  const moi = s.profile?.deviceId
+  const relies = new Set(Object.values(s.peers).map((p) => p.deviceId))
+  const out = new Map<string, NonRelie>()
+  for (const [peerId, liste] of Object.entries(s.annuaires)) {
+    const par = s.peers[peerId]?.name
+    if (!par) continue
+    for (const x of liste) {
+      if (x.deviceId === moi || relies.has(x.deviceId)) continue
+      const deja = out.get(x.deviceId)
+      if (deja) deja.via.push(par)
+      else out.set(x.deviceId, { ...x, via: [par] })
+    }
+  }
+  return [...out.values()]
+}
+
+/** Relance toutes les liaisons en quittant puis en rejoignant la même table. */
+export async function reessayerLiaisons(): Promise<void> {
+  const t = getState().table
+  if (!t) return
+  log('Nouvelle tentative de liaison avec tous les appareils de la table…')
+  await joinTable(t)
 }
 
 // ───────────────────────── Diagnostic ─────────────────────────

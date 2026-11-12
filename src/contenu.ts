@@ -44,6 +44,15 @@ export type Nouveaute = { version: string; date: string; points: string[] }
 /** Du plus récent au plus ancien. Écrit pour les joueurs, en langage simple. */
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    version: '0.13.0',
+    date: '12 novembre 2026',
+    points: [
+      'Table : si une personne est à la table mais que ton appareil n’arrive pas à se relier à elle, un encadré « ⚠ Pas reliés à cet appareil » le signale (onglet Table, accueil et Messages), avec qui la voit.',
+      'Bouton « 🔄 Réessayer » pour relancer les liaisons après avoir corrigé le réseau (même Wi-Fi, VPN coupé, pare-feu).',
+      'Ces personnes apparaissent déjà dans Messages : tu peux leur écrire, le message partira dès que la liaison sera établie.',
+    ],
+  },
+  {
     version: '0.12.1',
     date: '12 novembre 2026',
     points: [

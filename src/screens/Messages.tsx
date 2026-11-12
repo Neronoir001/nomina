@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  ajouterMembres, convDirecte, creerGroupe, markRead, nomDe, peerIdFor, quitterGroupe, renommerGroupe, roleLabel,
+  ajouterMembres, convDirecte, creerGroupe, markRead, nomDe, nonRelies, peerIdFor, quitterGroupe, renommerGroupe, roleLabel,
   sendMessage, supprimerConversation, supprimerMessage,
 } from '../lib/p2p'
 import { useStore } from '../lib/store'
 import type { ChatMessage, Contact, Groupe } from '../lib/types'
+import { AlerteLiaisons } from '../AlerteLiaisons'
 import { Modal } from '../ui'
 
 type ConvInfo = { conv: string; titre: string; sous: string; groupe?: Groupe; contact?: Contact; dernier?: ChatMessage; enLigne: number }
@@ -35,7 +36,13 @@ export default function Messages() {
       dernier: derniers.get(`g:${g.id}`),
       enLigne: g.membres.filter((d) => d !== me && peerIdFor(d)).length,
     })),
-    ...Object.values(s.contacts)
+    ...[
+      ...Object.values(s.contacts),
+      // Personnes à la table jamais reliées à cet appareil : on peut déjà leur écrire (le message attendra la liaison)
+      ...nonRelies(s)
+        .filter((x) => !s.contacts[x.deviceId])
+        .map((x) => ({ deviceId: x.deviceId, name: x.name, role: x.role, lastSeen: 0 })),
+    ]
       .filter((c) => c.deviceId !== me)
       .map((c) => ({
         conv: convDirecte(c.deviceId),
@@ -47,11 +54,13 @@ export default function Messages() {
       })),
   ].sort((a, b) => (b.dernier?.at ?? 0) - (a.dernier?.at ?? 0) || b.enLigne - a.enLigne || a.titre.localeCompare(b.titre))
 
+  const nonReliesIds = new Set(nonRelies(s).map((x) => x.deviceId))
   const ouverte = open ? convs.find((c) => c.conv === open) : undefined
   if (ouverte) return <Thread info={ouverte} onBack={() => setOpen(null)} />
 
   return (
     <div className="stack">
+      <AlerteLiaisons compact />
       <div className="card note">
         🔒 Les messages vont <b>directement</b> aux appareils des destinataires. Personne d'autre ne les reçoit : un groupe sans le MJ reste
         invisible pour lui. Ils sont gardés uniquement sur les appareils concernés.
@@ -77,7 +86,9 @@ export default function Messages() {
                       <span>
                         <b>{c.titre}</b> <span className="tag">{c.sous}</span>
                         {c.groupe && c.enLigne > 0 && <span className="muted small"> · {c.enLigne} en ligne</span>}
-                        {!c.groupe && !c.enLigne && <span className="muted small"> · hors ligne</span>}
+                        {!c.groupe && !c.enLigne && (
+                          <span className="muted small">{c.contact && nonReliesIds.has(c.contact.deviceId) ? ' · à la table, pas relié' : ' · hors ligne'}</span>
+                        )}
                       </span>
                       {c.dernier && (
                         <span className="muted small apercu tronque">
@@ -198,7 +209,13 @@ function Thread({ info, onBack }: { info: ConvInfo; onBack: () => void }) {
         <div ref={endRef} />
       </div>
 
-      {!g && !info.enLigne && <p className="muted small center">{info.titre} est hors ligne : le message partira dès qu'il se reconnectera à la table.</p>}
+      {!g && !info.enLigne && (
+        <p className="muted small center">
+          {info.contact && nonRelies(s).some((x) => x.deviceId === info.contact!.deviceId)
+            ? `${info.titre} est à la table mais pas relié à cet appareil : le message partira dès que la liaison sera établie (Table → Réessayer).`
+            : `${info.titre} est hors ligne : le message partira dès qu'il se reconnectera à la table.`}
+        </p>
+      )}
       {g && g.membres.length <= 1 && <p className="muted small center">Tu es seul dans ce groupe : ajoute des membres avec ⋯.</p>}
       <form
         className="composer"

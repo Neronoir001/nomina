@@ -8,6 +8,7 @@ import type { FicheRecue, RelayKind, TableInfo } from '../lib/types'
 import { Chooser } from './fiche/Pouvoirs'
 import PersoResume from './PersoResume'
 import { BoutonJetMJ, JournalJets } from '../JetSecret'
+import { AlerteLiaisons } from '../AlerteLiaisons'
 import { RELAYS } from '../lib/types'
 
 export default function Table({ pendingJoin, clearPending }: { pendingJoin: TableInfo | null; clearPending: () => void }) {
@@ -57,6 +58,8 @@ export default function Table({ pendingJoin, clearPending }: { pendingJoin: Tabl
           </ul>
         )}
       </section>
+
+      <AlerteLiaisons />
 
       {isMj ? <MjTools /> : <PlayerTools />}
     </div>

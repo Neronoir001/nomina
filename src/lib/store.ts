@@ -6,7 +6,7 @@ import type { JetSecret } from './jets'
 import type { Brouillon } from './creation'
 import type { Personnage } from './personnage'
 import { depuisFicheProto, nomAffiche, normaliser, nouveauPersonnage } from './personnage'
-import type { ChatMessage, Contact, FicheRecue, Groupe, LogLine, Peer, Profile, ReglesMaison, RelayKind, Signalement, TableInfo } from './types'
+import type { ChatMessage, Contact, FicheRecue, Groupe, LogLine, Peer, Profile, ReglesMaison, RelayKind, Signalement, TableInfo, VuALaTable } from './types'
 
 export type Status = 'deconnecte' | 'connexion' | 'connecte' | 'erreur'
 
@@ -51,6 +51,8 @@ export type State = {
   jetsDemandes: Record<string, 'envoye' | 'recu'>
   /** Création guidée en cours (gardée si l'appli est fermée) */
   brouillonCreation: Brouillon | null
+  /** Pour chaque appareil relié : la liste des appareils auxquels lui-même est relié */
+  annuaires: Record<string, VuALaTable[]>
   creationOuverte: boolean
   /** Annonce à afficher (ex. pouvoir accordé par le MJ) */
   annonce: { titre: string; texte: string } | null
@@ -98,6 +100,7 @@ let state: State = {
   jetOuvert: null,
   jetsDemandes: {},
   brouillonCreation: null,
+  annuaires: {},
   creationOuverte: false,
   erreurDemarrage: null,
   annonce: null,

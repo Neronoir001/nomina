@@ -328,3 +328,11 @@ label.case input { width: auto; margin-top: .2rem; flex: none; }
 .de-mini.large { min-width: 40px; height: 32px; background: var(--gold-soft); color: #1a1208; border: 0; }
 .creation-tire { flex-wrap: nowrap; padding: .3rem 0; }
 .creation-reprendre { width: 100%; margin-top: .6rem; }
+
+/* ───── Liaisons manquantes ───── */
+.alerte-liaisons { border-color: var(--warn); }
+.alerte-liaisons h3 { color: var(--warn); }
+.alerte-liaisons.compact {
+  display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; justify-content: space-between;
+  padding: .6rem .8rem; border: 1px solid var(--warn); border-radius: 10px; background: rgba(224, 168, 74, .1); font-size: .9rem;
+}

@@ -12,6 +12,7 @@ import { getState, heure, installerPackPropose, listePersos, majPerso, setState,
 import { Card, FilePick, Modal, Stepper } from '../ui'
 import { ChoixNouveau } from '../creation/Nouveau'
 import { BoutonPP } from '../BoutonPP'
+import { AlerteLiaisons } from '../AlerteLiaisons'
 import { BoutonJetMJ, BoutonJetSecret } from '../JetSecret'
 
 export type Onglet = 'accueil' | 'fiche' | 'referentiel' | 'table' | 'messages' | 'mj' | 'reglages'
@@ -232,6 +233,7 @@ function BlocTable({ aller, isMj }: { aller: (o: Onglet) => void; isMj: boolean 
             {s.status === 'connexion' ? 'connexion…' : peers.length ? `${peers.length} appareil(s) connecté(s)` : 'en attente des autres'}
           </p>
           {peers.length > 0 && <p className="muted small">{peers.map((p) => p.name ?? '…').join(', ')}</p>}
+          <AlerteLiaisons compact />
           {isMj && fiches.length > 0 && (
             <p className="muted small">
               Dernières fiches reçues : {fiches.map((f) => `${nomAffiche(f.perso)} (${f.name}, ${heure(f.receivedAt)})`).join(' · ')}
